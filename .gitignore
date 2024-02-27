@@ -1,0 +1,14 @@
+#ignore vs code folder
+.vscode
+
+#ignore swp files
+*.swp
+
+#ignore obj files
+*.o
+
+#ignore exe/out files
+*.out
+
+#ignore png images
+*.png
