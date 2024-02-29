@@ -4,35 +4,19 @@
 #include "board.h"
 #include "raylib.h"
 
-
-typedef struct Square
-{
-    int row;
-    int col
-} Square;
-
-Square getSquare(Vector2);
-Bool cursorOnImage(Board, Vector2, Vector2);
-
 int main(void)
 {
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chezz(TM)");
 
-    // image
-    // Image image = LoadImage("./castle.png");
-
-    // Texture2D texture = LoadTextureFromImage(image);
-    // UnloadImage(image);
-
-    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
+    SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
     int img_x = 0;
     int img_y = 0;
     Board board = initBoard();
     Bool dragging = False;
-    // Texture2D* dragTexture = NULL;
-    Texture2D dragTexture;
+    Piece dragPiece = {.piece=EMPTY, .textureRect={0,0,0,0}};
+    Vector2 dragPieceOriginalPos;
 
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
@@ -43,17 +27,16 @@ int main(void)
         drawBoard(board);
 
         // // Drag and Drop Logic
-        // Vector2 texturePos = {(float)img_x, (float)img_y}; 
-        // // 0 is LMB
-        if(IsMouseButtonDown(0) && !dragging) 
+        if(IsMouseButtonDown(0) && !dragging) // 0 is LMB
         { 
-            GridCell* gc = getCell(board);
+            GridCell* gc = getCellByMousePosition(board);
             if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
             {
                 dragging = True; 
-                // TODO: Destroy texture and malloc a new one here
-                // dragTexture = &(gc->piece->texture);
-                dragTexture = gc->piece->texture;
+                dragPiece.piece = gc->piece->piece;
+                dragPiece.textureRect = gc->piece->textureRect;
+                dragPieceOriginalPos.y = gc->row;
+                dragPieceOriginalPos.x = gc->col;
                 updateBoard(board, gc->row, gc->col, NULL); // TODO: change
             }
         }
@@ -64,38 +47,41 @@ int main(void)
             dragging = False; 
 
             Piece* piece = (Piece*)malloc(sizeof(Piece));
-            piece->piece = CASTLE; // TODO: need to change this
-            piece->texture = dragTexture; 
+            piece->piece = dragPiece.piece; // TODO: need to change this
+            piece->textureRect = dragPiece.textureRect;
 
-            GridCell* gc = getCell(board);
-            if(gc != NULL)
+            GridCell* gc = getCellByMousePosition(board);
+            if(gc != NULL && gc->piece != NULL && gc->piece->piece == EMPTY)
             {
                 updateBoard(board, gc->row, gc->col, piece);
             }
+            // if the selected cell is occupied place the piece back in its origin cell
+            else
+            {
+                gc = getCellByIndex(board, dragPieceOriginalPos.y, dragPieceOriginalPos.x);
+                if(gc != NULL)
+                {
+                    updateBoard(board, gc->row, gc->col, piece);
+                }
+            }
 
-            // dragTexture = NULL;
+            dragPiece.piece = EMPTY;
+            Rectangle dummyRect =  {0, 0, 0, 0};
+            dragPiece.textureRect = dummyRect;
+            // TODO: reset dragPieceOriginalPos variable
+
         }
 
         if (dragging)
         {
             // places centre of image on the mouse cursor
             Vector2 mousePos = GetMousePosition();
-            // img_x = mousePos.x - (dragTexture->width/2);
-            // img_y = mousePos.y - (dragTexture->height/2);
-            // DrawTexture(*(dragTexture), img_x, img_y, WHITE);
-            img_x = mousePos.x - (dragTexture.width / 2);
-            img_y = mousePos.y - (dragTexture.height/2);
-            DrawTexture(dragTexture, img_x, img_y, WHITE);
+            img_x = mousePos.x - (PIECE_WIDTH/2);
+            img_y = mousePos.y - (PIECE_HEIGHT/2);
+            Vector2 pos = {img_x, img_y};
+            DrawTextureRec(board.mainTexture, dragPiece.textureRect, pos, WHITE);
 
         }
-        // else
-        // {
-        //     // snaps image to the board cell that the cursor is on
-        //     Vector2 texturePos = {img_x + (texture.width/2), img_y + (texture.height/2)};
-        //     Square s = getSquare(texturePos);
-        //     img_x = (s.col * GRID_CELL_WIDTH) + (SCREEN_WIDTH/2 - texture.width/2); // centres the image in the cell
-        //     img_y = (s.row * GRID_CELL_HEIGHT) + (SCREEN_HEIGHT/2 - texture.height/2);
-        // }
         // End Drag and Drop Logic
 
         EndDrawing();
@@ -106,26 +92,4 @@ int main(void)
     return 0;
 }
 
-Square getSquare(Vector2 postion)
-{
-    // int w = 100;
-    // int h = 100;
-    Square s = {(int)(postion.y / GRID_CELL_WIDTH), (int)(postion.x / GRID_CELL_HEIGHT)};
-    return s;
-}
-
-Bool cursorOnImage(Board board, Vector2 mousePosition, Vector2 imagePosition)
-{
-    // GetMousePosition returns {0.0, 0.0} for some reason when the cursor is not on the window
-    // This was causing the programme to think that the cursor was on the top left square when it was not
-    if(mousePosition.x > 0 && mousePosition.y > 0)
-    {
-        Square mouseSq = getSquare(mousePosition);
-        Square imgSq = getSquare(imagePosition);
-
-        return (mouseSq.row == imgSq.row && mouseSq.col == imgSq.col);
-    }
-
-    return False;
-}
 

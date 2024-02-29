@@ -12,4 +12,6 @@ typedef struct Board{
 Board initBoard(void);
 void drawBoard(Board);
 void updateBoard(Board, int, int, Piece*);
-GridCell* getCell(Board);
+GridCell* getCellByMousePosition(Board);
+GridCell* getCellByIndex(Board,int,int);
+Piece* getPiece(ChessPiece);
