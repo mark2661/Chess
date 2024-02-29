@@ -6,6 +6,16 @@ typedef enum Bool{
     True
 } Bool;
 
+typedef enum ChessPiece{
+    EMPTY,
+    PAWN,
+    CASTLE,
+    KNIGHT,
+    BISHOP,
+    QUEEN,
+    KING
+} ChessPiece;
+
 extern const int GRID_CELL_WIDTH;
 extern const int GRID_CELL_HEIGHT;
 extern const int SCREEN_WIDTH;
