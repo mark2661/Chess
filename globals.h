@@ -23,6 +23,11 @@ typedef enum ChessPiece
     BLACK_KING
 } ChessPiece;
 
+typedef struct Pair{
+    int x;
+    int y;
+} Pair;
+
 extern const int GRID_CELL_WIDTH;
 extern const int GRID_CELL_HEIGHT;
 extern const int SCREEN_WIDTH;

@@ -4,6 +4,7 @@
 #include "board.h"
 #include "raylib.h"
 
+// TODO: General refactor of all files
 int main(void)
 {
 
@@ -17,6 +18,7 @@ int main(void)
     Bool dragging = False;
     Piece dragPiece = {.piece=EMPTY, .textureRect={0,0,0,0}};
     Vector2 dragPieceOriginalPos;
+    node dragPieceValidCells = NULL;
 
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
@@ -37,6 +39,8 @@ int main(void)
                 dragPiece.textureRect = gc->piece->textureRect;
                 dragPieceOriginalPos.y = gc->row;
                 dragPieceOriginalPos.x = gc->col;
+
+                dragPieceValidCells = getValidCells(&board, gc);
                 updateBoard(board, gc->row, gc->col, NULL); // TODO: change
             }
         }
@@ -51,14 +55,14 @@ int main(void)
             piece->textureRect = dragPiece.textureRect;
 
             GridCell* gc = getCellByMousePosition(board);
-            if(gc != NULL && gc->piece != NULL && gc->piece->piece == EMPTY)
+            if(gc != NULL && gc->piece != NULL && gc->piece->piece == EMPTY && isValidGridCell(gc, dragPieceValidCells))
             {
                 updateBoard(board, gc->row, gc->col, piece);
             }
             // if the selected cell is occupied place the piece back in its origin cell
             else
             {
-                gc = getCellByIndex(board, dragPieceOriginalPos.y, dragPieceOriginalPos.x);
+                gc = getCellByIndex(&board, dragPieceOriginalPos.y, dragPieceOriginalPos.x);
                 if(gc != NULL)
                 {
                     updateBoard(board, gc->row, gc->col, piece);
@@ -68,6 +72,9 @@ int main(void)
             dragPiece.piece = EMPTY;
             Rectangle dummyRect =  {0, 0, 0, 0};
             dragPiece.textureRect = dummyRect;
+            resetColourBoard(&board);
+            freeList(dragPieceValidCells);
+            dragPieceValidCells = NULL;
             // TODO: reset dragPieceOriginalPos variable
 
         }
@@ -75,6 +82,13 @@ int main(void)
         if (dragging)
         {
             // places centre of image on the mouse cursor
+            node cur = dragPieceValidCells;
+            while(cur != NULL)
+            {
+                board.colourBoard[cur->gc->row][cur->gc->col] = 2; // Temp code to visually identify valid drop cells for a piece
+                cur = cur->next;
+            }
+
             Vector2 mousePos = GetMousePosition();
             img_x = mousePos.x - (PIECE_WIDTH/2);
             img_y = mousePos.y - (PIECE_HEIGHT/2);
