@@ -19,6 +19,7 @@ int main(void)
     Piece dragPiece = {.id = -1, .piece=EMPTY, .textureRect={0,0,0,0}};
     Vector2 dragPieceOriginalPos;
     node dragPieceValidCells = NULL;
+    node dragPieceCaptureCells = NULL;
 
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
@@ -42,6 +43,7 @@ int main(void)
                 dragPieceOriginalPos.x = gc->col;
 
                 dragPieceValidCells = getValidCells(&board, gc);
+                dragPieceCaptureCells = getCaptureCells(&board, gc);
                 updateBoard(board, gc->row, gc->col, NULL); // TODO: change
             }
         }
@@ -90,6 +92,13 @@ int main(void)
             while(cur != NULL)
             {
                 board.colourBoard[cur->gc->row][cur->gc->col] = 2; // Temp code to visually identify valid drop cells for a piece
+                cur = cur->next;
+            }
+
+            cur = dragPieceCaptureCells;
+            while(cur != NULL)
+            {
+                board.colourBoard[cur->gc->row][cur->gc->col] = 3; // Temp code to visually identify valid drop cells for a piece
                 cur = cur->next;
             }
 

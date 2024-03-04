@@ -40,6 +40,8 @@ GridCell* getCellByMousePosition(Board);
 GridCell* getCellByIndex(Board*,int,int);
 Piece* getPiece(ChessPiece);
 node getValidCells(Board*, GridCell*);
+node getLineOfSightCells(Board*, GridCell*);
+node getCaptureCells(Board*, GridCell*);
 node createNode();
 node addNode(node, GridCell*);
 void freeList(node);
