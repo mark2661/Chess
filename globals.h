@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 #include "raylib.h"
 
 typedef enum Bool{
@@ -28,6 +29,7 @@ typedef struct Pair{
     int y;
 } Pair;
 
+uint32_t getID();
 extern const int GRID_CELL_WIDTH;
 extern const int GRID_CELL_HEIGHT;
 extern const int SCREEN_WIDTH;

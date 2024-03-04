@@ -10,3 +10,9 @@ const int PIECE_HEIGHT = 64;
 
 Color c1 = {118, 150, 86, 255};  // greenish colour
 Color c2 = {255, 255, 255, 255}; // white colour
+
+uint32_t getID()
+{
+    static uint32_t id = 0;
+    return id++;
+}

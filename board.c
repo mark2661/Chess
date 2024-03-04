@@ -10,6 +10,7 @@ Board initBoard(void)
     Image image = LoadImage("./pieces_64.png");
     Board board = {.colourBoard = {{0}}, .Board={NULL}};
     board.mainTexture = LoadTextureFromImage(image);
+    board.pawnSet = createHashSet(); 
     UnloadImage(image);
 
     for(size_t i=0; i<8; i++)
@@ -290,6 +291,7 @@ Piece* getPiece(ChessPiece piece)
         break;
     }
 
+    newPiece->id = getID();
     newPiece->textureRect.width = PIECE_WIDTH;
     newPiece->textureRect.height = PIECE_HEIGHT;
     return newPiece;
@@ -309,7 +311,6 @@ node getValidCells(Board* board, GridCell* currentCell)
         switch (pieceType)
         {
         case WHITE_PAWN:
-        // TODO: only allow pawns to move 2 cells on first move (using a set would be a good option)
             // forward cell
             cell = NULL;
             cell = getCellByIndex(board, currentCell->row + 1, currentCell->col);
@@ -318,11 +319,15 @@ node getValidCells(Board* board, GridCell* currentCell)
                 addNode(head, cell);
             }
             // forward 2 cell
-            cell = getCellByIndex(board, currentCell->row + 2, currentCell->col);
-            if(cell != NULL)
+            if(!contains(board->pawnSet, currentCell->piece))
             {
-                addNode(head, cell);
+                cell = getCellByIndex(board, currentCell->row + 2, currentCell->col);
+                if (cell != NULL)
+                {
+                    addNode(head, cell);
+                }
             }
+            insert(board->pawnSet, currentCell->piece);
             return head;
             break;
 
@@ -335,11 +340,15 @@ node getValidCells(Board* board, GridCell* currentCell)
                 addNode(head, cell);
             }
             // forward 2 cell
-            cell = getCellByIndex(board, currentCell->row - 2, currentCell->col);
-            if(cell != NULL)
+            if(!contains(board->pawnSet, currentCell->piece))
             {
-                addNode(head, cell);
+                cell = getCellByIndex(board, currentCell->row - 2, currentCell->col);
+                if (cell != NULL)
+                {
+                    addNode(head, cell);
+                }
             }
+            insert(board->pawnSet, currentCell->piece);
             return head;
             break;
 
@@ -727,4 +736,67 @@ Bool isValidGridCell(GridCell* gc, node head)
         cur = cur->next;
     }
     return False;
+}
+
+HashNode* createHashNode(Piece* piece)
+{
+    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+    if(newNode == NULL)
+    {
+        perror("Memory allocation error");
+        exit(EXIT_FAILURE);
+    }
+
+    newNode->piece = piece;
+    newNode->next = NULL;
+    return newNode;
+}
+
+HashSet* createHashSet(){
+    HashSet* set = (HashSet*)malloc(sizeof(HashSet));
+    if(set == NULL)
+    {
+        perror("Memory allocation error");
+        exit(EXIT_FAILURE);
+    }
+
+    for(size_t i=0; i<SIZE; i++)
+    {
+        set->buckets[i] = NULL;
+    }
+
+    return set;
+}
+
+int hash(int key)
+{
+    return key % SIZE;
+}
+
+void insert(HashSet* set, Piece* piece)
+{
+    if(!contains(set, piece))
+    {
+        int index = hash(piece->id);
+        HashNode *newNode = createHashNode(piece);
+        newNode->next = set->buckets[index];
+        set->buckets[index] = newNode;
+    }
+}
+
+bool contains(HashSet* set, Piece* piece)
+{
+    int index = hash(piece->id);
+    HashNode* current = set->buckets[index];
+    while (current != NULL)
+    {
+        if(current->piece->id == piece->id)
+        {
+            return true;
+        }
+
+        current = current->next;
+    }
+
+    return false;
 }

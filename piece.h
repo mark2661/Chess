@@ -3,6 +3,7 @@
 
 
 typedef struct Piece{
+    uint32_t id;
     ChessPiece piece;
     // Texture2D texture;
     Rectangle textureRect;

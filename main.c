@@ -16,7 +16,7 @@ int main(void)
     int img_y = 0;
     Board board = initBoard();
     Bool dragging = False;
-    Piece dragPiece = {.piece=EMPTY, .textureRect={0,0,0,0}};
+    Piece dragPiece = {.id = -1, .piece=EMPTY, .textureRect={0,0,0,0}};
     Vector2 dragPieceOriginalPos;
     node dragPieceValidCells = NULL;
 
@@ -35,6 +35,7 @@ int main(void)
             if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
             {
                 dragging = True; 
+                dragPiece.id = gc->piece->id;
                 dragPiece.piece = gc->piece->piece;
                 dragPiece.textureRect = gc->piece->textureRect;
                 dragPieceOriginalPos.y = gc->row;
@@ -51,6 +52,7 @@ int main(void)
             dragging = False; 
 
             Piece* piece = (Piece*)malloc(sizeof(Piece));
+            piece->id = dragPiece.id;
             piece->piece = dragPiece.piece; // TODO: need to change this
             piece->textureRect = dragPiece.textureRect;
 
@@ -78,6 +80,8 @@ int main(void)
             // TODO: reset dragPieceOriginalPos variable
 
         }
+
+        // TODO: add logic for piece capture
 
         if (dragging)
         {
