@@ -494,6 +494,7 @@ node getValidCells(Board* board, GridCell* currentCell)
     return NULL;
 }
 
+// TODO: refactor
 node getLineOfSightCells(Board* board, GridCell* gc)
 {
     ChessPiece piece = gc->piece->piece;
@@ -532,75 +533,24 @@ node getLineOfSightCells(Board* board, GridCell* gc)
             cell = NULL;
             row = gc->row;
             col = gc->col;
-            // vertical up
-            row -= 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
+            Pair castleValidDirections[4] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+            for(size_t i=0; i<4; i++)
             {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
+                while (row >= 0 && row < 8 && col >= 0 && col < 8)
                 {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row -= 1;
-            }
-            // vertical up
-            row = gc->row;
-            col = gc->col;
-            row += 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row += 1;
-            }
+                    row += castleValidDirections[i].x;
+                    col += castleValidDirections[i].y;
 
-            // horizontal left
-            row = gc->row;
-            col = gc->col;
-            col -= 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
+                    GridCell* cell = getCellByIndex(board, row, col);
+                    if(cell != NULL)
+                    {
+                        addNode(head, cell);
+                        if(cell->piece->piece != EMPTY) { break; }
+                    }
                 }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                col -= 1;
+                row = gc->row;
+                col = gc->col;
             }
-
-            // horizontal right
-            row = gc->row;
-            col = gc->col;
-            col += 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                col += 1;
-            }
-
             return head;
             break;
 
@@ -610,83 +560,25 @@ node getLineOfSightCells(Board* board, GridCell* gc)
             row = gc->row;
             col = gc->col;
 
-            // top left diag
-            row -= 1;
-            col -= 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
+            Pair bishopValidDirections[4] = {{-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
+            for(size_t i=0; i<4; i++)
             {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
+                while (row >= 0 && row < 8 && col >= 0 && col < 8)
                 {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row -= 1;
-                col -= 1;
-            }
+                    row += bishopValidDirections[i].x;
+                    col += bishopValidDirections[i].y;
 
-            // top right diag
-            row = gc->row;
-            col = gc->col;
-            row -= 1;
-            col += 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
+                    GridCell* cell = getCellByIndex(board, row, col);
+                    if(cell != NULL)
+                    {
+                        addNode(head, cell);
+                        if(cell->piece->piece != EMPTY) { break; }
+                    }
                 }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row -= 1;
-                col += 1;
+                row = gc->row;
+                col = gc->col;
             }
-
-            // bottom left diag
-            row = gc->row;
-            col = gc->col;
-            row += 1;
-            col -= 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row += 1;
-                col -= 1;
-            }
-
-            // bottom right diag
-            row = gc->row;
-            col = gc->col;
-            row += 1;
-            col += 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row += 1;
-                col += 1;
-            }
+           
             return head;
             break;
 
@@ -719,153 +611,23 @@ node getLineOfSightCells(Board* board, GridCell* gc)
             row = gc->row;
             col = gc->col;
 
-            // top left diag
-            row -= 1;
-            col -= 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
+            Pair queenValidDirections[8] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}, {-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
+            for(size_t i=0; i<8; i++)
             {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
+                while (row >= 0 && row < 8 && col >= 0 && col < 8)
                 {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row -= 1;
-                col -= 1;
-            }
+                    row += queenValidDirections[i].x;
+                    col += queenValidDirections[i].y;
 
-            // top right diag
-            row = gc->row;
-            col = gc->col;
-            row -= 1;
-            col += 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
+                    GridCell* cell = getCellByIndex(board, row, col);
+                    if(cell != NULL)
+                    {
+                        addNode(head, cell);
+                        if(cell->piece->piece != EMPTY) { break; }
+                    }
                 }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row -= 1;
-                col += 1;
-            }
-
-            // bottom left diag
-            row = gc->row;
-            col = gc->col;
-            row += 1;
-            col -= 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row += 1;
-                col -= 1;
-            }
-
-            // bottom right diag
-            row = gc->row;
-            col = gc->col;
-            row += 1;
-            col += 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row += 1;
-                col += 1;
-            }
-
-            // vertical up
-            row = gc->row;
-            col = gc->col;
-            row -= 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row -= 1;
-            }
-            // vertical up
-            row = gc->row;
-            col = gc->col;
-            row += 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                row += 1;
-            }
-
-            // horizontal left
-            row = gc->row;
-            col = gc->col;
-            col -= 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                col -= 1;
-            }
-
-            // horizontal right
-            row = gc->row;
-            col = gc->col;
-            col += 1;
-            while (row >= 0 && row < 8 && col >= 0 && col < 8)
-            {
-                cell = getCellByIndex(board, row, col);
-                if (cell != NULL)
-                {
-                    addNode(head, cell);
-                }
-                if (cell->piece->piece != EMPTY)
-                {
-                    break;
-                }
-                col += 1;
+                row = gc->row;
+                col = gc->col;
             }
 
             return head;
