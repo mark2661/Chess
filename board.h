@@ -34,14 +34,16 @@ typedef struct Board{
 
 Board initBoard(void);
 void drawBoard(Board);
-void updateBoard(Board, int, int, Piece*);
+void updateBoard(Board*, int, int, Piece*);
 void resetColourBoard(Board*);
-GridCell* getCellByMousePosition(Board);
+GridCell* getCellByMousePosition(Board*);
 GridCell* getCellByIndex(Board*,int,int);
 Piece* getPiece(ChessPiece);
 node getValidCells(Board*, GridCell*);
 node getLineOfSightCells(Board*, GridCell*);
 node getCaptureCells(Board*, GridCell*);
+Bool isWhitePiece(Piece*);
+Bool isBlackPiece(Piece*);
 node createNode();
 node addNode(node, GridCell*);
 void freeList(node);

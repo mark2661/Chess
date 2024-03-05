@@ -4,24 +4,34 @@
 #include "board.h"
 #include "raylib.h"
 
+typedef struct DragPiece{
+    Piece piece;
+    Vector2 originalPosition;
+    node validCells;
+    node captureCells;
+} DragPiece;
+
+void freeDragPiece(DragPiece*);
+DragPiece* getDragPiece(Board*, GridCell*);
+Piece* getNewPiece(DragPiece*);
+DragPiece* startDragOperation(Board*);
+void endDragOperation(Board*, DragPiece*);
+
+Bool dragging = False;
+
 // TODO: General refactor of all files
 int main(void)
 {
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chezz(TM)");
 
-    SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+    SetTargetFPS(60);
 
-    int img_x = 0;
-    int img_y = 0;
     Board board = initBoard();
-    Bool dragging = False;
-    Piece dragPiece = {.id = -1, .piece=EMPTY, .textureRect={0,0,0,0}};
-    Vector2 dragPieceOriginalPos;
-    node dragPieceValidCells = NULL;
-    node dragPieceCaptureCells = NULL;
+    // Bool dragging = False;
+    DragPiece* dragPiece = NULL;
 
-    while (!WindowShouldClose())    // Detect window close button or ESC key
+    while (!WindowShouldClose()) // Detect window close button or ESC key
     {
         BeginDrawing();
         ClearBackground(RAYWHITE);
@@ -31,71 +41,28 @@ int main(void)
 
         // // Drag and Drop Logic
         if(IsMouseButtonDown(0) && !dragging) // 0 is LMB
-        { 
-            GridCell* gc = getCellByMousePosition(board);
-            if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
-            {
-                dragging = True; 
-                dragPiece.id = gc->piece->id;
-                dragPiece.piece = gc->piece->piece;
-                dragPiece.textureRect = gc->piece->textureRect;
-                dragPieceOriginalPos.y = gc->row;
-                dragPieceOriginalPos.x = gc->col;
-
-                dragPieceValidCells = getValidCells(&board, gc);
-                dragPieceCaptureCells = getCaptureCells(&board, gc);
-                updateBoard(board, gc->row, gc->col, NULL); // TODO: change
-            }
+        {
+            dragPiece = startDragOperation(&board);
         }
 
-        else if (IsMouseButtonUp(0) && dragging) 
-        { 
-            //TODO: need to do proper memory management
-            dragging = False; 
-
-            Piece* piece = (Piece*)malloc(sizeof(Piece));
-            piece->id = dragPiece.id;
-            piece->piece = dragPiece.piece; // TODO: need to change this
-            piece->textureRect = dragPiece.textureRect;
-
-            GridCell* gc = getCellByMousePosition(board);
-            if(gc != NULL && gc->piece != NULL && gc->piece->piece == EMPTY && isValidGridCell(gc, dragPieceValidCells))
-            {
-                updateBoard(board, gc->row, gc->col, piece);
-            }
-            // if the selected cell is occupied place the piece back in its origin cell
-            else
-            {
-                gc = getCellByIndex(&board, dragPieceOriginalPos.y, dragPieceOriginalPos.x);
-                if(gc != NULL)
-                {
-                    updateBoard(board, gc->row, gc->col, piece);
-                }
-            }
-
-            dragPiece.piece = EMPTY;
-            Rectangle dummyRect =  {0, 0, 0, 0};
-            dragPiece.textureRect = dummyRect;
-            resetColourBoard(&board);
-            freeList(dragPieceValidCells);
-            dragPieceValidCells = NULL;
-            // TODO: reset dragPieceOriginalPos variable
-
+        else if (IsMouseButtonUp(0) && dragging && dragPiece != NULL) 
+        {
+            endDragOperation(&board, dragPiece);
+            dragPiece = NULL;
         }
 
         // TODO: add logic for piece capture
 
-        if (dragging)
+        if (dragPiece != NULL && dragging)
         {
-            // places centre of image on the mouse cursor
-            node cur = dragPieceValidCells;
+            node cur = dragPiece->validCells;
             while(cur != NULL)
             {
                 board.colourBoard[cur->gc->row][cur->gc->col] = 2; // Temp code to visually identify valid drop cells for a piece
                 cur = cur->next;
             }
 
-            cur = dragPieceCaptureCells;
+            cur = dragPiece->captureCells;
             while(cur != NULL)
             {
                 board.colourBoard[cur->gc->row][cur->gc->col] = 3; // Temp code to visually identify valid drop cells for a piece
@@ -103,10 +70,8 @@ int main(void)
             }
 
             Vector2 mousePos = GetMousePosition();
-            img_x = mousePos.x - (PIECE_WIDTH/2);
-            img_y = mousePos.y - (PIECE_HEIGHT/2);
-            Vector2 pos = {img_x, img_y};
-            DrawTextureRec(board.mainTexture, dragPiece.textureRect, pos, WHITE);
+            Vector2 pos = {mousePos.x - (PIECE_WIDTH/2), mousePos.y - (PIECE_HEIGHT/2)};
+            DrawTextureRec(board.mainTexture, dragPiece->piece.textureRect, pos, WHITE);
 
         }
         // End Drag and Drop Logic
@@ -120,3 +85,79 @@ int main(void)
 }
 
 
+void freeDragPiece(DragPiece* dragPiece)
+{
+    freeList(dragPiece->validCells);
+    dragPiece->validCells = NULL;
+
+    freeList(dragPiece->captureCells);
+    dragPiece->captureCells = NULL;
+
+    free(dragPiece);
+}
+
+DragPiece* getDragPiece(Board* board, GridCell* gc)
+{
+    DragPiece* dragPiece = (DragPiece*)malloc(sizeof(DragPiece));
+    dragPiece->piece.id = gc->piece->id;
+    dragPiece->piece.piece = gc->piece->piece;
+    dragPiece->piece.textureRect = gc->piece->textureRect;
+    Vector2 originalPosition = {gc->row, gc->col};
+    dragPiece->originalPosition = originalPosition;
+
+    dragPiece->validCells = getValidCells(board, gc);
+    dragPiece->captureCells = getCaptureCells(board, gc);
+
+    return dragPiece;
+}
+
+Piece* getNewPiece(DragPiece* dragPiece)
+{
+    if(dragPiece != NULL)
+    {
+        Piece *piece = (Piece *)malloc(sizeof(Piece));
+        piece->id = dragPiece->piece.id;
+        piece->piece = dragPiece->piece.piece;
+        piece->textureRect = dragPiece->piece.textureRect;
+
+        return piece;
+    }
+    return NULL;
+}
+
+DragPiece* startDragOperation(Board* board)
+{
+    GridCell *gc = getCellByMousePosition(board);
+    if (gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
+    {
+        dragging = True;
+        DragPiece* dragPiece = getDragPiece(board, gc);
+        updateBoard(board, gc->row, gc->col, NULL); // TODO: change
+        return dragPiece;
+    }
+    return NULL;
+}
+
+void endDragOperation(Board* board, DragPiece* dragPiece)
+{
+            dragging = False;
+
+            Piece *piece = getNewPiece(dragPiece);
+
+            GridCell* gc = getCellByMousePosition(board);
+            if(gc != NULL && gc->piece != NULL && gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
+            {
+                updateBoard(board, gc->row, gc->col, piece);
+            }
+            else
+            {
+                gc = getCellByIndex(board, dragPiece->originalPosition.y, dragPiece->originalPosition.x);
+                if(gc != NULL)
+                {
+                    updateBoard(board, gc->row, gc->col, piece);
+                }
+            }
+
+            resetColourBoard(board);
+            freeDragPiece(dragPiece);
+}

@@ -166,13 +166,14 @@ void drawBoard(Board board)
       }
 }
 
-void updateBoard(Board board, int row, int col, Piece* piece)
+void updateBoard(Board* board, int row, int col, Piece* piece)
 {
     if(row>=0 && row<8 && col>=0 && col<8)
     {
-        GridCell* gc = board.Board[row][col];
+        GridCell* gc = board->Board[row][col];
         if(piece != NULL)
         {
+            // free(gc->piece);
             gc->piece = piece;
         }
         else
@@ -205,14 +206,14 @@ void resetColourBoard(Board* board)
     }
 }
 
-GridCell* getCellByMousePosition(Board board)
+GridCell* getCellByMousePosition(Board* board)
 {
     Vector2 mousePos = GetMousePosition();
     int row = ((int)mousePos.y) / GRID_CELL_HEIGHT;
     int col = ((int)mousePos.x) / GRID_CELL_WIDTH;
     if (row<0 || row>=8 || col<0 || col>=8) { return NULL; }
 
-    return board.Board[row][col];
+    return board->Board[row][col];
 }
 
 GridCell* getCellByIndex(Board* board, int row, int col)
@@ -494,20 +495,17 @@ node getValidCells(Board* board, GridCell* currentCell)
     return NULL;
 }
 
-// TODO: refactor
 node getLineOfSightCells(Board* board, GridCell* gc)
 {
     ChessPiece piece = gc->piece->piece;
     node head = createNode();
     head->gc = gc;
-    GridCell* cell;
     int row;
     int col;
     switch (piece)
     {
         case WHITE_PAWN:
         case BLACK_PAWN:
-            cell = NULL;
             row = gc->row;
             col = gc->col;
             Pair pawnAttackPositions[4] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
@@ -530,7 +528,6 @@ node getLineOfSightCells(Board* board, GridCell* gc)
 
         case WHITE_CASTLE:
         case BLACK_CASTLE:
-            cell = NULL;
             row = gc->row;
             col = gc->col;
             Pair castleValidDirections[4] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
@@ -556,7 +553,6 @@ node getLineOfSightCells(Board* board, GridCell* gc)
 
         case WHITE_BISHOP:
         case BLACK_BISHOP:
-            cell = NULL;
             row = gc->row;
             col = gc->col;
 
@@ -584,7 +580,6 @@ node getLineOfSightCells(Board* board, GridCell* gc)
 
         case WHITE_KNIGHT:
         case BLACK_KNIGHT:
-            cell = NULL;
             row = gc->row;
             col = gc->col;
             Pair knight_positions[8] = {{-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}, {1, 2}, {2, 1}, {2, -1}, {1, -2}};
@@ -593,7 +588,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                 row = row + knight_positions[i].x;
                 col = col + knight_positions[i].y;
 
-                cell = getCellByIndex(board, row, col);
+                GridCell* cell = getCellByIndex(board, row, col);
                 if (cell != NULL)
                 {
                     addNode(head, cell);
@@ -607,7 +602,6 @@ node getLineOfSightCells(Board* board, GridCell* gc)
 
         case WHITE_QUEEN:
         case BLACK_QUEEN:
-            cell = NULL;
             row = gc->row;
             col = gc->col;
 
@@ -644,7 +638,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                 row = row + king_positions[i].x;
                 col = col + king_positions[i].y;
 
-                cell = getCellByIndex(board, row, col);
+                GridCell* cell = getCellByIndex(board, row, col);
                 if (cell != NULL)
                 {
                     addNode(head, cell);
@@ -672,10 +666,9 @@ node getCaptureCells(Board* board, GridCell* gc)
         node cur = getLineOfSightCells(board, gc);
         while (cur != NULL)
         {
-            // if white piece
-            if (gc->piece->piece >= WHITE_PAWN && gc->piece->piece <= WHITE_KING)
+            if (isWhitePiece(gc->piece))
             {
-                if (cur->gc->piece->piece >= BLACK_PAWN && cur->gc->piece->piece <= BLACK_KING)
+                if (isBlackPiece(cur->gc->piece))
                 {
                     if (head == NULL)
                     {
@@ -688,10 +681,9 @@ node getCaptureCells(Board* board, GridCell* gc)
                     }
                 }
             }
-            // if black piece
-            else if (gc->piece->piece >= BLACK_PAWN && gc->piece->piece <= BLACK_KING)
+            else if (isBlackPiece(gc->piece))
             {
-                if (cur->gc->piece->piece >= WHITE_PAWN && cur->gc->piece->piece <= WHITE_KING)
+                if (isWhitePiece(cur->gc->piece))
                 {
                     if (head == NULL)
                     {
@@ -710,6 +702,16 @@ node getCaptureCells(Board* board, GridCell* gc)
 
         return head;
     }
+}
+
+Bool isWhitePiece(Piece* p)
+{
+    return (p->piece >= WHITE_PAWN && p->piece <= WHITE_KING);
+} 
+
+Bool isBlackPiece(Piece* p)
+{
+    return (p->piece >= BLACK_PAWN && p->piece <= BLACK_KING);
 }
 
 node createNode()
