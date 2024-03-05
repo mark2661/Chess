@@ -308,377 +308,188 @@ node getValidCells(Board* board, GridCell* currentCell)
         ChessPiece pieceType = currentCell->piece->piece;
         node head = createNode();
         head->gc = currentCell;
-        GridCell *cell = NULL;
         int row;
         int col;
         Pair positions[8];
         switch (pieceType)
         {
         case WHITE_PAWN:
-            // forward cell
-            cell = NULL;
-            cell = getCellByIndex(board, currentCell->row + 1, currentCell->col);
-            if(cell != NULL)
+        // Scope needed to prevent redefinition error involving GridCell* cell
             {
-                addNode(head, cell);
-            }
-            // forward 2 cell
-            if(!contains(board->pawnSet, currentCell->piece))
-            {
-                cell = getCellByIndex(board, currentCell->row + 2, currentCell->col);
+                // forward cell
+                GridCell* cell = getCellByIndex(board, currentCell->row + 1, currentCell->col);
                 if (cell != NULL)
                 {
                     addNode(head, cell);
                 }
+                // forward 2 cell
+                if (!contains(board->pawnSet, currentCell->piece))
+                {
+                    cell = getCellByIndex(board, currentCell->row + 2, currentCell->col);
+                    if (cell != NULL)
+                    {
+                        addNode(head, cell);
+                    }
+                }
+                insert(board->pawnSet, currentCell->piece);
             }
-            insert(board->pawnSet, currentCell->piece);
             return head;
             break;
 
         case BLACK_PAWN:
             // forward cell
-            cell = NULL;
-            cell = getCellByIndex(board, currentCell->row - 1, currentCell->col);
-            if(cell != NULL)
             {
-                addNode(head, cell);
-            }
-            // forward 2 cell
-            if(!contains(board->pawnSet, currentCell->piece))
-            {
-                cell = getCellByIndex(board, currentCell->row - 2, currentCell->col);
+                GridCell* cell = getCellByIndex(board, currentCell->row - 1, currentCell->col);
                 if (cell != NULL)
                 {
                     addNode(head, cell);
                 }
-            }
-            insert(board->pawnSet, currentCell->piece);
-            return head;
-            break;
-
-        case WHITE_CASTLE:
-        case BLACK_CASTLE:
-            cell = NULL;
-            row = currentCell->row;
-            col = currentCell->col;
-            // vertical up
-            row -= 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
+                // forward 2 cell
+                if (!contains(board->pawnSet, currentCell->piece))
                 {
-                    addNode(head, cell);
+                    cell = getCellByIndex(board, currentCell->row - 2, currentCell->col);
+                    if (cell != NULL)
+                    {
+                        addNode(head, cell);
+                    }
                 }
-                else{ break;}
-                row -= 1;
-            }
-            // vertical up
-            row = currentCell->row;
-            col = currentCell->col;
-            row += 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row += 1;
-            }
-            
-            // horizontal left
-            row = currentCell->row;
-            col = currentCell->col;
-            col -= 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                col -= 1;
-            }
-
-            // horizontal right
-            row = currentCell->row;
-            col = currentCell->col;
-            col += 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                col += 1;
-            }
-
-            return head;
-            break;
-
-
-        case WHITE_BISHOP:
-        case BLACK_BISHOP:
-            cell = NULL;
-            row = currentCell->row;
-            col = currentCell->col;
-
-            // top left diag
-            row -= 1;
-            col -= 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row -= 1;
-                col -= 1;
-            }
-
-            // top right diag
-            row = currentCell->row;
-            col = currentCell->col;
-            row -= 1;
-            col += 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row -= 1;
-                col += 1;
-            }
-
-            // bottom left diag
-            row = currentCell->row;
-            col = currentCell->col;
-            row += 1;
-            col -= 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row += 1;
-                col -= 1;
-            }
-
-            // bottom right diag
-            row = currentCell->row;
-            col = currentCell->col;
-            row += 1;
-            col += 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row += 1;
-                col += 1;
+                insert(board->pawnSet, currentCell->piece);
             }
             return head;
             break;
 
-        case WHITE_KNIGHT:
-        case BLACK_KNIGHT:
-            cell = NULL;
-            row = currentCell->row;
-            col = currentCell->col;
-            Pair knight_positions[8] = {{-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}, {1, 2}, {2, 1}, {2, -1}, {1, -2}};
-            for(size_t i=0; i<8; i++)
-            {
-                row = row + knight_positions[i].x;
-                col = col + knight_positions[i].y;
-
-                cell = getCellByIndex(board, row, col);
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-
+            case WHITE_CASTLE:
+            case BLACK_CASTLE:
                 row = currentCell->row;
                 col = currentCell->col;
-            }
-            return head;
-            break;
-        
-        case WHITE_QUEEN:
-        case BLACK_QUEEN:
-            cell = NULL;
-            row = currentCell->row;
-            col = currentCell->col;
-
-            // top left diag
-            row -= 1;
-            col -= 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
+                Pair castleValidDirections[4] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+                for (size_t i = 0; i < 4; i++)
                 {
-                    addNode(head, cell);
+                    while (row >= 0 && row < 8 && col >= 0 && col < 8)
+                    {
+                        row += castleValidDirections[i].x;
+                        col += castleValidDirections[i].y;
+                        GridCell *cell = getCellByIndex(board, row, col);
+                        if (cell != NULL && cell->piece->piece == EMPTY)
+                        {
+                            addNode(head, cell);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    row = currentCell->row;
+                    col = currentCell->col;
                 }
-                else{ break;}
-                row -= 1;
-                col -= 1;
-            }
+                return head;
+                break;
 
-            // top right diag
-            row = currentCell->row;
-            col = currentCell->col;
-            row -= 1;
-            col += 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row -= 1;
-                col += 1;
-            }
-
-            // bottom left diag
-            row = currentCell->row;
-            col = currentCell->col;
-            row += 1;
-            col -= 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row += 1;
-                col -= 1;
-            }
-
-            // bottom right diag
-            row = currentCell->row;
-            col = currentCell->col;
-            row += 1;
-            col += 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row += 1;
-                col += 1;
-            }
-
-            // vertical up
-            row = currentCell->row;
-            col = currentCell->col;
-            row -= 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row -= 1;
-            }
-            // vertical up
-            row = currentCell->row;
-            col = currentCell->col;
-            row += 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                row += 1;
-            }
-            
-            // horizontal left
-            row = currentCell->row;
-            col = currentCell->col;
-            col -= 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                col -= 1;
-            }
-
-            // horizontal right
-            row = currentCell->row;
-            col = currentCell->col;
-            col += 1;
-            while(row>=0 && row<8 && col>=0 && col<8)
-            {
-                cell = getCellByIndex(board, row, col); 
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-                else{ break;}
-                col += 1;
-            }
-
-            return head;
-            break;
-
-        case WHITE_KING:
-        case BLACK_KING:
-            row = currentCell->row;
-            col = currentCell->col;
-            Pair king_positions[8] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}};
-
-            for (size_t i = 0; i < 8; i++)
-            {
-                row = row + king_positions[i].x;
-                col = col + king_positions[i].y;
-
-                cell = getCellByIndex(board, row, col);
-                if(cell != NULL && cell->piece->piece == EMPTY)
-                {
-                    addNode(head, cell);
-                }
-
+            case WHITE_BISHOP:
+            case BLACK_BISHOP:
                 row = currentCell->row;
                 col = currentCell->col;
-            }
-            return head;
-            break;
+                Pair bishopValidDirections[4] = {{-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
 
-       default:
-            break;
-        }
+                for (size_t i = 0; i < 4; i++)
+                {
+                    while (row >= 0 && row < 8 && col >= 0 && col < 8)
+                    {
+                        row += bishopValidDirections[i].x;
+                        col += bishopValidDirections[i].y;
+                        GridCell *cell = getCellByIndex(board, row, col);
+                        if (cell != NULL && cell->piece->piece == EMPTY)
+                        {
+                            addNode(head, cell);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    row = currentCell->row;
+                    col = currentCell->col;
+                }
+
+                return head;
+                break;
+
+            case WHITE_KNIGHT:
+            case BLACK_KNIGHT:
+                row = currentCell->row;
+                col = currentCell->col;
+                Pair knight_positions[8] = {{-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}, {1, 2}, {2, 1}, {2, -1}, {1, -2}};
+                for (size_t i = 0; i < 8; i++)
+                {
+                    row = row + knight_positions[i].x;
+                    col = col + knight_positions[i].y;
+
+                    GridCell *cell = getCellByIndex(board, row, col);
+                    if (cell != NULL && cell->piece->piece == EMPTY)
+                    {
+                        addNode(head, cell);
+                    }
+
+                    row = currentCell->row;
+                    col = currentCell->col;
+                }
+                return head;
+                break;
+
+            case WHITE_QUEEN:
+            case BLACK_QUEEN:
+                row = currentCell->row;
+                col = currentCell->col;
+                Pair queenValidDirections[8] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}, {-1, -1}, {-1, 1}, {1, 1}, {1, -1}};
+                for (size_t i = 0; i < 8; i++)
+                {
+                    while (row >= 0 && row < 8 && col >= 0 && col < 8)
+                    {
+                        row += queenValidDirections[i].x;
+                        col += queenValidDirections[i].y;
+
+                        GridCell *cell = getCellByIndex(board, row, col);
+                        if (cell != NULL && cell->piece->piece == EMPTY)
+                        {
+                            addNode(head, cell);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    row = currentCell->row;
+                    col = currentCell->col;
+                }
+                return head;
+                break;
+
+            case WHITE_KING:
+            case BLACK_KING:
+                row = currentCell->row;
+                col = currentCell->col;
+                Pair king_positions[8] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}, {0, -1}};
+
+                for (size_t i = 0; i < 8; i++)
+                {
+                    row = row + king_positions[i].x;
+                    col = col + king_positions[i].y;
+
+                    GridCell *cell = getCellByIndex(board, row, col);
+                    if (cell != NULL && cell->piece->piece == EMPTY)
+                    {
+                        addNode(head, cell);
+                    }
+
+                    row = currentCell->row;
+                    col = currentCell->col;
+                }
+                return head;
+                break;
+
+            default:
+                break;
+            }
     }
     return NULL;
 }
@@ -1093,56 +904,50 @@ node getLineOfSightCells(Board* board, GridCell* gc)
 
 node getCaptureCells(Board* board, GridCell* gc)
 {
-    // regular piece logic
     if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
     {
         node head = NULL;
-        // if(gc->piece->piece != WHITE_PAWN && gc->piece->piece != BLACK_PAWN)
+        node cur = getLineOfSightCells(board, gc);
+        while (cur != NULL)
         {
-            // TODO: change to get line of sight cells
-            node cur = getLineOfSightCells(board, gc);
-            while (cur != NULL)
+            // if white piece
+            if (gc->piece->piece >= WHITE_PAWN && gc->piece->piece <= WHITE_KING)
             {
-                // if white piece
-                if(gc->piece->piece >= WHITE_PAWN && gc->piece->piece <= WHITE_KING)
+                if (cur->gc->piece->piece >= BLACK_PAWN && cur->gc->piece->piece <= BLACK_KING)
                 {
-                    if(cur->gc->piece->piece >= BLACK_PAWN && cur->gc->piece->piece <= BLACK_KING)
+                    if (head == NULL)
                     {
-                        if (head == NULL)
-                        {
-                            head = createNode();
-                            head->gc = cur->gc;
-                        }
-                        else
-                        {
-                            addNode(head, cur->gc);
-                        }
+                        head = createNode();
+                        head->gc = cur->gc;
                     }
-
-                }
-                // if black piece
-                else if(gc->piece->piece >= BLACK_PAWN && gc->piece->piece <= BLACK_KING)
-                {
-                    if (cur->gc->piece->piece >= WHITE_PAWN && cur->gc->piece->piece <= WHITE_KING)
+                    else
                     {
-                        if (head == NULL)
-                        {
-                            head = createNode();
-                            head->gc = cur->gc;
-                        }
-                        else
-                        {
-                            addNode(head, cur->gc);
-                        }
+                        addNode(head, cur->gc);
                     }
                 }
-
-                cur = cur->next;
             }
-       }
-       return head;
+            // if black piece
+            else if (gc->piece->piece >= BLACK_PAWN && gc->piece->piece <= BLACK_KING)
+            {
+                if (cur->gc->piece->piece >= WHITE_PAWN && cur->gc->piece->piece <= WHITE_KING)
+                {
+                    if (head == NULL)
+                    {
+                        head = createNode();
+                        head->gc = cur->gc;
+                    }
+                    else
+                    {
+                        addNode(head, cur->gc);
+                    }
+                }
+            }
+
+            cur = cur->next;
+        }
+
+        return head;
     }
-    // pawn logic
 }
 
 node createNode()
