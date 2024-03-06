@@ -19,7 +19,7 @@ void endDragOperation(Board*, DragPiece*);
 
 Bool dragging = False;
 
-// TODO: General refactor of all files
+// TODO: Add state machine pattern
 int main(void)
 {
 
@@ -28,7 +28,6 @@ int main(void)
     SetTargetFPS(60);
 
     Board board = initBoard();
-    // Bool dragging = False;
     DragPiece* dragPiece = NULL;
 
     while (!WindowShouldClose()) // Detect window close button or ESC key
@@ -145,10 +144,19 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
             Piece *piece = getNewPiece(dragPiece);
 
             GridCell* gc = getCellByMousePosition(board);
+            // Move to empty cell
             if(gc != NULL && gc->piece != NULL && gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
             {
                 updateBoard(board, gc->row, gc->col, piece);
             }
+            // Capture piece and move to cell
+            else if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
+            {
+                // remove captured piece
+                freePiece(gc);
+                updateBoard(board, gc->row, gc->col, piece);
+            }
+            // Invalid move return to origin cell
             else
             {
                 gc = getCellByIndex(board, dragPiece->originalPosition.y, dragPiece->originalPosition.x);

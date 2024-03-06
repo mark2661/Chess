@@ -9,3 +9,5 @@ typedef struct GridCell
     Piece* piece;
 
 }GridCell;
+
+void freePiece(GridCell*);
