@@ -4,6 +4,8 @@
 #include "board.h"
 #include "raylib.h"
 
+#define BOUNDING_BOX_PADDING 5
+
 typedef struct DragPiece{
     Piece piece;
     Vector2 originalPosition;
@@ -14,10 +16,14 @@ typedef struct DragPiece{
 void freeDragPiece(DragPiece*);
 DragPiece* getDragPiece(Board*, GridCell*);
 Piece* getNewPiece(DragPiece*);
-DragPiece* startDragOperation(Board*);
+DragPiece* startDragOperation(Board*, Player);
 void endDragOperation(Board*, DragPiece*);
+void gameIteration(Board*, Player);
+void pieceSelectMenuIteration(Board*, Player);
 
 Bool dragging = False;
+// GameState state = WHITE_IN_PLAY;
+GameState state = WHITE_PIECE_SELECT_MENU;
 
 // TODO: Add state machine pattern
 int main(void)
@@ -28,52 +34,34 @@ int main(void)
     SetTargetFPS(60);
 
     Board board = initBoard();
-    DragPiece* dragPiece = NULL;
 
     while (!WindowShouldClose()) // Detect window close button or ESC key
     {
         BeginDrawing();
         ClearBackground(RAYWHITE);
-
-        
         drawBoard(board);
 
-        // // Drag and Drop Logic
-        if(IsMouseButtonDown(0) && !dragging) // 0 is LMB
+        switch (state)
         {
-            dragPiece = startDragOperation(&board);
+        case WHITE_IN_PLAY:
+            gameIteration(&board, PLAYER_WHITE);
+            break;
+        case BLACK_IN_PLAY: 
+            gameIteration(&board, PLAYER_BLACK);
+            break;
+        // TODO: handle check conditions
+        case WHITE_IN_CHECK:
+            break;
+        case BLACK_IN_CHECK:
+            break;
+        case WHITE_PIECE_SELECT_MENU:
+            pieceSelectMenuIteration(&board, PLAYER_WHITE);
+            break;
+        case BLACK_PIECE_SELECT_MENU:
+            break;
+        default:
+            break;
         }
-
-        else if (IsMouseButtonUp(0) && dragging && dragPiece != NULL) 
-        {
-            endDragOperation(&board, dragPiece);
-            dragPiece = NULL;
-        }
-
-        // TODO: add logic for piece capture
-
-        if (dragPiece != NULL && dragging)
-        {
-            node cur = dragPiece->validCells;
-            while(cur != NULL)
-            {
-                board.colourBoard[cur->gc->row][cur->gc->col] = 2; // Temp code to visually identify valid drop cells for a piece
-                cur = cur->next;
-            }
-
-            cur = dragPiece->captureCells;
-            while(cur != NULL)
-            {
-                board.colourBoard[cur->gc->row][cur->gc->col] = 3; // Temp code to visually identify valid drop cells for a piece
-                cur = cur->next;
-            }
-
-            Vector2 mousePos = GetMousePosition();
-            Vector2 pos = {mousePos.x - (PIECE_WIDTH/2), mousePos.y - (PIECE_HEIGHT/2)};
-            DrawTextureRec(board.mainTexture, dragPiece->piece.textureRect, pos, WHITE);
-
-        }
-        // End Drag and Drop Logic
 
         EndDrawing();
     }
@@ -83,6 +71,63 @@ int main(void)
     return 0;
 }
 
+void gameIteration(Board* board, Player player)
+{
+
+    static DragPiece* dragPiece = NULL;
+    // // Drag and Drop Logic
+    if (IsMouseButtonDown(0) && !dragging) // 0 is LMB
+    {
+        dragPiece = startDragOperation(board, player);
+    }
+
+    else if (IsMouseButtonUp(0) && dragging && dragPiece != NULL)
+    {
+        endDragOperation(board, dragPiece);
+        dragPiece = NULL;
+    }
+
+    if (dragPiece != NULL && dragging)
+    {
+        node cur = dragPiece->validCells;
+        while (cur != NULL)
+        {
+            board->colourBoard[cur->gc->row][cur->gc->col] = 2; // Temp code to visually identify valid drop cells for a piece
+            cur = cur->next;
+        }
+
+        cur = dragPiece->captureCells;
+        while (cur != NULL)
+        {
+            board->colourBoard[cur->gc->row][cur->gc->col] = 3; // Temp code to visually identify valid drop cells for a piece
+            cur = cur->next;
+        }
+
+        Vector2 mousePos = GetMousePosition();
+        Vector2 pos = {mousePos.x - (PIECE_WIDTH / 2), mousePos.y - (PIECE_HEIGHT / 2)};
+        DrawTextureRec(board->mainTexture, dragPiece->piece.textureRect, pos, WHITE);
+    }
+    // End Drag and Drop Logic
+}
+
+void pieceSelectMenuIteration(Board* board, Player player)
+{
+   char* message = "Sample Text";
+   int messageWidth = MeasureText(message, 42);
+   int centre_x = (SCREEN_WIDTH / 2) - (messageWidth / 2); 
+   int centre_y = SCREEN_HEIGHT / 2; 
+   Rectangle boundingBox = {.x=(centre_x - BOUNDING_BOX_PADDING/2),
+                            .y=(centre_y - BOUNDING_BOX_PADDING/2), 
+                            .width = messageWidth+BOUNDING_BOX_PADDING/2, 
+                            .height = 42+BOUNDING_BOX_PADDING/2
+                           };
+   DrawText(message, centre_x, centre_y, 42, BLACK);
+   // Draw bounding box if mousing over text
+   if(CheckCollisionPointRec(GetMousePosition(), boundingBox))
+   {
+       DrawRectangleLinesEx(boundingBox, 3.0f, RED);
+   }
+}
 
 void freeDragPiece(DragPiece* dragPiece)
 {
@@ -124,15 +169,18 @@ Piece* getNewPiece(DragPiece* dragPiece)
     return NULL;
 }
 
-DragPiece* startDragOperation(Board* board)
+DragPiece* startDragOperation(Board* board, Player player)
 {
     GridCell *gc = getCellByMousePosition(board);
     if (gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
     {
-        dragging = True;
-        DragPiece* dragPiece = getDragPiece(board, gc);
-        updateBoard(board, gc->row, gc->col, NULL); // TODO: change
-        return dragPiece;
+        if ((player == PLAYER_WHITE && isWhitePiece(gc->piece)) || (player == PLAYER_BLACK && isBlackPiece(gc->piece)))
+        {
+            dragging = True;
+            DragPiece *dragPiece = getDragPiece(board, gc);
+            updateBoard(board, gc->row, gc->col, NULL); // TODO: change
+            return dragPiece;
+        }
     }
     return NULL;
 }
@@ -148,6 +196,8 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
             if(gc != NULL && gc->piece != NULL && gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
             {
                 updateBoard(board, gc->row, gc->col, piece);
+                if(state == WHITE_IN_PLAY) { state = BLACK_IN_PLAY; }
+                else if(state == BLACK_IN_PLAY) { state = WHITE_IN_PLAY; }
             }
             // Capture piece and move to cell
             else if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
@@ -155,6 +205,8 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                 // remove captured piece
                 freePiece(gc);
                 updateBoard(board, gc->row, gc->col, piece);
+                if(state == WHITE_IN_PLAY) { state = BLACK_IN_PLAY; }
+                else if(state == BLACK_IN_PLAY) { state = WHITE_IN_PLAY; }
             }
             // Invalid move return to origin cell
             else

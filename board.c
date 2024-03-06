@@ -308,6 +308,7 @@ node getValidCells(Board* board, GridCell* currentCell)
     {
         ChessPiece pieceType = currentCell->piece->piece;
         node head = createNode();
+        // TODO: don't include currentCell in validCells list
         head->gc = currentCell;
         int row;
         int col;
