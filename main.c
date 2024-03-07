@@ -41,8 +41,6 @@ int main(void)
     SetTargetFPS(60);
 
     Board board = initBoard();
-    // menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
-    // menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
 
     while (!WindowShouldClose()) // Detect window close button or ESC key
     {
@@ -145,64 +143,8 @@ void pieceSelectMenuIteration(Board* board, Player player)
             // detect click
             if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), item->boundingBox))
             {
-                // printf("Piece code: %d\n", item->piece);
-                ChessPiece pieceCode = item->piece;
-                Rectangle newTextureRect = {.width=PIECE_WIDTH, .height=PIECE_HEIGHT};
-                switch (pieceCode)
-                {
-                    case WHITE_CASTLE:
-                        newTextureRect.x = 0 * PIECE_WIDTH;
-                        newTextureRect.y = 0 * PIECE_HEIGHT;
-                        break;
-                    case WHITE_KNIGHT:
-                        newTextureRect.x = 1 * PIECE_WIDTH;
-                        newTextureRect.y = 0 * PIECE_HEIGHT;
-                        break;
-                    case WHITE_BISHOP:
-                        newTextureRect.x = 2 * PIECE_WIDTH;
-                        newTextureRect.y = 0 * PIECE_HEIGHT;
-                        break;
-                    case WHITE_PAWN:
-                        newTextureRect.x = 3 * PIECE_WIDTH;
-                        newTextureRect.y = 0 * PIECE_HEIGHT;
-                        break;
-                    case WHITE_KING:
-                        newTextureRect.x = 4 * PIECE_WIDTH;
-                        newTextureRect.y = 0 * PIECE_HEIGHT;
-                        break;
-                    case WHITE_QUEEN:
-                        newTextureRect.x = 5 * PIECE_WIDTH;
-                        newTextureRect.y = 0 * PIECE_HEIGHT;
-                        break;
-
-                    // BLACK PIECES
-                    case BLACK_CASTLE:
-                        newTextureRect.x = 0 * PIECE_WIDTH;
-                        newTextureRect.y = 1 * PIECE_HEIGHT;
-                        break;
-                    case BLACK_KNIGHT:
-                        newTextureRect.x = 1 * PIECE_WIDTH;
-                        newTextureRect.y = 1 * PIECE_HEIGHT;
-                        break;
-                    case BLACK_BISHOP:
-                        newTextureRect.x = 2 * PIECE_WIDTH;
-                        newTextureRect.y = 1 * PIECE_HEIGHT;
-                        break;
-                    case BLACK_PAWN:
-                        newTextureRect.x = 3 * PIECE_WIDTH;
-                        newTextureRect.y = 1 * PIECE_HEIGHT;
-                        break;
-                    case BLACK_KING:
-                        newTextureRect.x = 4 * PIECE_WIDTH;
-                        newTextureRect.y = 1 * PIECE_HEIGHT;
-                        break;
-                    case BLACK_QUEEN:
-                        newTextureRect.x = 5 * PIECE_WIDTH;
-                        newTextureRect.y = 1 * PIECE_HEIGHT;
-                        break;
-                }
                 pawnPromotionCell->piece->piece = item->piece;
-                pawnPromotionCell->piece->textureRect = newTextureRect;
+                pawnPromotionCell->piece->textureRect = getTextureRect(item->piece);
 
                 if(player == PLAYER_WHITE) { state = BLACK_IN_PLAY; }
                 else if (player == PLAYER_BLACK) { state = WHITE_IN_PLAY; }

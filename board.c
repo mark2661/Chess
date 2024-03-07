@@ -230,65 +230,41 @@ Piece* getPiece(ChessPiece piece)
     // WHITE PIECES
     case WHITE_CASTLE:
         newPiece->piece = WHITE_CASTLE;
-        newPiece->textureRect.x = 0 * PIECE_WIDTH;
-        newPiece->textureRect.y = 0 * PIECE_HEIGHT;
         break;
     case WHITE_KNIGHT:
         newPiece->piece = WHITE_KNIGHT;
-        newPiece->textureRect.x = 1 * PIECE_WIDTH;
-        newPiece->textureRect.y = 0 * PIECE_HEIGHT;
         break;
     case WHITE_BISHOP:
         newPiece->piece = WHITE_BISHOP;
-        newPiece->textureRect.x = 2 * PIECE_WIDTH;
-        newPiece->textureRect.y = 0 * PIECE_HEIGHT;
         break;
     case WHITE_PAWN:
         newPiece->piece = WHITE_PAWN;
-        newPiece->textureRect.x = 3 * PIECE_WIDTH;
-        newPiece->textureRect.y = 0 * PIECE_HEIGHT;
         break;
     case WHITE_KING:
         newPiece->piece = WHITE_KING;
-        newPiece->textureRect.x = 4 * PIECE_WIDTH;
-        newPiece->textureRect.y = 0 * PIECE_HEIGHT;
         break;
     case WHITE_QUEEN:
         newPiece->piece = WHITE_QUEEN;
-        newPiece->textureRect.x = 5 * PIECE_WIDTH;
-        newPiece->textureRect.y = 0 * PIECE_HEIGHT;
         break;
 
     // BLACK PIECES
     case BLACK_CASTLE:
         newPiece->piece = BLACK_CASTLE;
-        newPiece->textureRect.x = 0 * PIECE_WIDTH;
-        newPiece->textureRect.y = 1 * PIECE_HEIGHT;
         break;
     case BLACK_KNIGHT:
         newPiece->piece = BLACK_KNIGHT;
-        newPiece->textureRect.x = 1 * PIECE_WIDTH;
-        newPiece->textureRect.y = 1 * PIECE_HEIGHT;
         break;
     case BLACK_BISHOP:
         newPiece->piece = BLACK_BISHOP;
-        newPiece->textureRect.x = 2 * PIECE_WIDTH;
-        newPiece->textureRect.y = 1 * PIECE_HEIGHT;
         break;
     case BLACK_PAWN:
         newPiece->piece = BLACK_PAWN;
-        newPiece->textureRect.x = 3 * PIECE_WIDTH;
-        newPiece->textureRect.y = 1 * PIECE_HEIGHT;
         break;
     case BLACK_KING:
         newPiece->piece = BLACK_KING;
-        newPiece->textureRect.x = 4 * PIECE_WIDTH;
-        newPiece->textureRect.y = 1 * PIECE_HEIGHT;
         break;
     case BLACK_QUEEN:
         newPiece->piece = BLACK_QUEEN;
-        newPiece->textureRect.x = 5 * PIECE_WIDTH;
-        newPiece->textureRect.y = 1 * PIECE_HEIGHT;
         break;
 
     default:
@@ -297,8 +273,7 @@ Piece* getPiece(ChessPiece piece)
     }
 
     newPiece->id = getID();
-    newPiece->textureRect.width = PIECE_WIDTH;
-    newPiece->textureRect.height = PIECE_HEIGHT;
+    newPiece->textureRect = getTextureRect(newPiece->piece);
     return newPiece;
 }
 
@@ -772,6 +747,74 @@ Bool isValidGridCell(GridCell* gc, node head)
         cur = cur->next;
     }
     return False;
+}
+
+Rectangle getTextureRect(ChessPiece piece)
+{
+    Rectangle textureClipRect = {.x=0, .y=0, .width=PIECE_WIDTH, .height=PIECE_HEIGHT};
+    switch (piece)
+    {
+    // WHITE PIECES
+    case WHITE_CASTLE:
+        textureClipRect.x = 0 * PIECE_WIDTH;
+        textureClipRect.y = 0 * PIECE_HEIGHT;
+        break;
+    case WHITE_KNIGHT:
+        textureClipRect.x = 1 * PIECE_WIDTH;
+        textureClipRect.y = 0 * PIECE_HEIGHT;
+        break;
+    case WHITE_BISHOP:
+        textureClipRect.x = 2 * PIECE_WIDTH;
+        textureClipRect.y = 0 * PIECE_HEIGHT;
+        break;
+    case WHITE_PAWN:
+        textureClipRect.x = 3 * PIECE_WIDTH;
+        textureClipRect.y = 0 * PIECE_HEIGHT;
+        break;
+    case WHITE_KING:
+        textureClipRect.x = 4 * PIECE_WIDTH;
+        textureClipRect.y = 0 * PIECE_HEIGHT;
+        break;
+    case WHITE_QUEEN:
+        textureClipRect.x = 5 * PIECE_WIDTH;
+        textureClipRect.y = 0 * PIECE_HEIGHT;
+        break;
+
+    // BLACK PIECES
+    case BLACK_CASTLE:
+        textureClipRect.x = 0 * PIECE_WIDTH;
+        textureClipRect.y = 1 * PIECE_HEIGHT;
+        break;
+    case BLACK_KNIGHT:
+        textureClipRect.x = 1 * PIECE_WIDTH;
+        textureClipRect.y = 1 * PIECE_HEIGHT;
+        break;
+    case BLACK_BISHOP:
+        textureClipRect.x = 2 * PIECE_WIDTH;
+        textureClipRect.y = 1 * PIECE_HEIGHT;
+        break;
+    case BLACK_PAWN:
+        textureClipRect.x = 3 * PIECE_WIDTH;
+        textureClipRect.y = 1 * PIECE_HEIGHT;
+        break;
+    case BLACK_KING:
+        textureClipRect.x = 4 * PIECE_WIDTH;
+        textureClipRect.y = 1 * PIECE_HEIGHT;
+        break;
+    case BLACK_QUEEN:
+        textureClipRect.x = 5 * PIECE_WIDTH;
+        textureClipRect.y = 1 * PIECE_HEIGHT;
+        break;
+
+    default:
+        textureClipRect.x = 0;
+        textureClipRect.y = 0;
+        textureClipRect.width = 0;
+        textureClipRect.height = 0;
+        break;
+    }
+
+    return textureClipRect;
 }
 
 HashNode* createHashNode(Piece* piece)

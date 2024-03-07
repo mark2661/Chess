@@ -48,6 +48,7 @@ node createNode();
 node addNode(node, GridCell*);
 void freeList(node);
 Bool isValidGridCell(GridCell*, node);
+Rectangle getTextureRect(ChessPiece);
 
 HashNode* createHashNode(Piece*);
 HashSet* createHashSet();

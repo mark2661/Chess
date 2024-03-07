@@ -6,7 +6,7 @@
 Menu* createMenu(char* title, char** options, size_t length, Player player)
 {
     if(title == NULL) { return NULL; }
-    static int item_y = MENU_TEXT_START_HEIGHT;
+    int item_y = MENU_TEXT_START_HEIGHT;
     Menu* menu = (Menu*)malloc(sizeof(Menu));
     menu->title = createMenuItem(title, EMPTY);
     menu->menuItems = (MenuItem**)malloc(sizeof(MenuItem*)*length);
