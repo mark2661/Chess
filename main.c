@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include "globals.h"
 #include "board.h"
+#include "menu.h"
 #include "raylib.h"
 
-#define BOUNDING_BOX_PADDING 5
-
+#define PIECE_SELECT_MENU_OPTIONS {"CASTLE", "KNIGHT", "BISHOP", "QUEEN"}
+#define PIECE_SELECT_MENU_OPTIONS_LENGTH 4
 typedef struct DragPiece{
     Piece piece;
     Vector2 originalPosition;
@@ -22,8 +23,14 @@ void gameIteration(Board*, Player);
 void pieceSelectMenuIteration(Board*, Player);
 
 Bool dragging = False;
-// GameState state = WHITE_IN_PLAY;
-GameState state = WHITE_PIECE_SELECT_MENU;
+GameState state = WHITE_IN_PLAY;
+// GameState state = WHITE_PIECE_SELECT_MENU;
+
+Menu* menu = NULL;
+GridCell* pawnPromotionCell = NULL;
+
+char *options[PIECE_SELECT_MENU_OPTIONS_LENGTH] = PIECE_SELECT_MENU_OPTIONS;
+size_t options_length = PIECE_SELECT_MENU_OPTIONS_LENGTH;
 
 // TODO: Add state machine pattern
 int main(void)
@@ -34,6 +41,8 @@ int main(void)
     SetTargetFPS(60);
 
     Board board = initBoard();
+    // menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
+    // menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
 
     while (!WindowShouldClose()) // Detect window close button or ESC key
     {
@@ -58,6 +67,7 @@ int main(void)
             pieceSelectMenuIteration(&board, PLAYER_WHITE);
             break;
         case BLACK_PIECE_SELECT_MENU:
+            pieceSelectMenuIteration(&board, PLAYER_BLACK);
             break;
         default:
             break;
@@ -76,12 +86,12 @@ void gameIteration(Board* board, Player player)
 
     static DragPiece* dragPiece = NULL;
     // // Drag and Drop Logic
-    if (IsMouseButtonDown(0) && !dragging) // 0 is LMB
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !dragging)
     {
         dragPiece = startDragOperation(board, player);
     }
 
-    else if (IsMouseButtonUp(0) && dragging && dragPiece != NULL)
+    else if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && dragging && dragPiece != NULL)
     {
         endDragOperation(board, dragPiece);
         dragPiece = NULL;
@@ -112,21 +122,93 @@ void gameIteration(Board* board, Player player)
 
 void pieceSelectMenuIteration(Board* board, Player player)
 {
-   char* message = "Sample Text";
-   int messageWidth = MeasureText(message, 42);
-   int centre_x = (SCREEN_WIDTH / 2) - (messageWidth / 2); 
-   int centre_y = SCREEN_HEIGHT / 2; 
-   Rectangle boundingBox = {.x=(centre_x - BOUNDING_BOX_PADDING/2),
-                            .y=(centre_y - BOUNDING_BOX_PADDING/2), 
-                            .width = messageWidth+BOUNDING_BOX_PADDING/2, 
-                            .height = 42+BOUNDING_BOX_PADDING/2
-                           };
-   DrawText(message, centre_x, centre_y, 42, BLACK);
-   // Draw bounding box if mousing over text
-   if(CheckCollisionPointRec(GetMousePosition(), boundingBox))
-   {
-       DrawRectangleLinesEx(boundingBox, 3.0f, RED);
-   }
+    // Render menu title
+    if(menu->title != NULL)
+    {
+        menu->title->messagePosition.y = MENU_TITLE_START_HEIGHT;
+        DrawText(menu->title->message, menu->title->messagePosition.x, menu->title->messagePosition.y, MENU_TEXT_FONT_SIZE, BLACK);
+    }
+
+    // Render menu items
+    for(size_t i=0; i<PIECE_SELECT_MENU_OPTIONS_LENGTH; i++)
+    {
+        MenuItem *item = menu->menuItems[i];
+        if (item != NULL)
+        {
+            DrawText(item->message, item->messagePosition.x, item->messagePosition.y, MENU_TEXT_FONT_SIZE, BLACK);
+
+            // Draw bounding box if mousing over text
+            if (CheckCollisionPointRec(GetMousePosition(), item->boundingBox))
+            {
+                DrawRectangleLinesEx(item->boundingBox, 3.0f, RED);
+            }
+            // detect click
+            if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), item->boundingBox))
+            {
+                // printf("Piece code: %d\n", item->piece);
+                ChessPiece pieceCode = item->piece;
+                Rectangle newTextureRect = {.width=PIECE_WIDTH, .height=PIECE_HEIGHT};
+                switch (pieceCode)
+                {
+                    case WHITE_CASTLE:
+                        newTextureRect.x = 0 * PIECE_WIDTH;
+                        newTextureRect.y = 0 * PIECE_HEIGHT;
+                        break;
+                    case WHITE_KNIGHT:
+                        newTextureRect.x = 1 * PIECE_WIDTH;
+                        newTextureRect.y = 0 * PIECE_HEIGHT;
+                        break;
+                    case WHITE_BISHOP:
+                        newTextureRect.x = 2 * PIECE_WIDTH;
+                        newTextureRect.y = 0 * PIECE_HEIGHT;
+                        break;
+                    case WHITE_PAWN:
+                        newTextureRect.x = 3 * PIECE_WIDTH;
+                        newTextureRect.y = 0 * PIECE_HEIGHT;
+                        break;
+                    case WHITE_KING:
+                        newTextureRect.x = 4 * PIECE_WIDTH;
+                        newTextureRect.y = 0 * PIECE_HEIGHT;
+                        break;
+                    case WHITE_QUEEN:
+                        newTextureRect.x = 5 * PIECE_WIDTH;
+                        newTextureRect.y = 0 * PIECE_HEIGHT;
+                        break;
+
+                    // BLACK PIECES
+                    case BLACK_CASTLE:
+                        newTextureRect.x = 0 * PIECE_WIDTH;
+                        newTextureRect.y = 1 * PIECE_HEIGHT;
+                        break;
+                    case BLACK_KNIGHT:
+                        newTextureRect.x = 1 * PIECE_WIDTH;
+                        newTextureRect.y = 1 * PIECE_HEIGHT;
+                        break;
+                    case BLACK_BISHOP:
+                        newTextureRect.x = 2 * PIECE_WIDTH;
+                        newTextureRect.y = 1 * PIECE_HEIGHT;
+                        break;
+                    case BLACK_PAWN:
+                        newTextureRect.x = 3 * PIECE_WIDTH;
+                        newTextureRect.y = 1 * PIECE_HEIGHT;
+                        break;
+                    case BLACK_KING:
+                        newTextureRect.x = 4 * PIECE_WIDTH;
+                        newTextureRect.y = 1 * PIECE_HEIGHT;
+                        break;
+                    case BLACK_QUEEN:
+                        newTextureRect.x = 5 * PIECE_WIDTH;
+                        newTextureRect.y = 1 * PIECE_HEIGHT;
+                        break;
+                }
+                pawnPromotionCell->piece->piece = item->piece;
+                pawnPromotionCell->piece->textureRect = newTextureRect;
+
+                if(player == PLAYER_WHITE) { state = BLACK_IN_PLAY; }
+                else if (player == PLAYER_BLACK) { state = WHITE_IN_PLAY; }
+            }
+        }
+    }
 }
 
 void freeDragPiece(DragPiece* dragPiece)
@@ -192,32 +274,59 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
             Piece *piece = getNewPiece(dragPiece);
 
             GridCell* gc = getCellByMousePosition(board);
-            // Move to empty cell
-            if(gc != NULL && gc->piece != NULL && gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
+            if(gc != NULL && gc->piece != NULL)
             {
-                updateBoard(board, gc->row, gc->col, piece);
-                if(state == WHITE_IN_PLAY) { state = BLACK_IN_PLAY; }
-                else if(state == BLACK_IN_PLAY) { state = WHITE_IN_PLAY; }
-            }
-            // Capture piece and move to cell
-            else if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
-            {
-                // remove captured piece
-                freePiece(gc);
-                updateBoard(board, gc->row, gc->col, piece);
-                if(state == WHITE_IN_PLAY) { state = BLACK_IN_PLAY; }
-                else if(state == BLACK_IN_PLAY) { state = WHITE_IN_PLAY; }
-            }
-            // Invalid move return to origin cell
-            else
-            {
-                gc = getCellByIndex(board, dragPiece->originalPosition.y, dragPiece->originalPosition.x);
-                if(gc != NULL)
+                // Move to empty cell
+                if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
                 {
                     updateBoard(board, gc->row, gc->col, piece);
+                    if (state == WHITE_IN_PLAY)
+                    {
+                        state = BLACK_IN_PLAY;
+                    }
+                    else if (state == BLACK_IN_PLAY)
+                    {
+                        state = WHITE_IN_PLAY;
+                    }
+                }
+                // Capture piece and move to cell
+                else if (gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
+                {
+                    // remove captured piece
+                    freePiece(gc);
+                    updateBoard(board, gc->row, gc->col, piece);
+                    if (state == WHITE_IN_PLAY)
+                    {
+                        state = BLACK_IN_PLAY;
+                    }
+                    else if (state == BLACK_IN_PLAY)
+                    {
+                        state = WHITE_IN_PLAY;
+                    }
+                }
+                // Invalid move return to origin cell
+                else
+                {
+                    gc = getCellByIndex(board, dragPiece->originalPosition.y, dragPiece->originalPosition.x);
+                    if (gc != NULL)
+                    {
+                        updateBoard(board, gc->row, gc->col, piece);
+                    }
+                }
+
+                if(gc->piece->piece == WHITE_PAWN && gc->row == 7)
+                {
+                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
+                    pawnPromotionCell = gc;
+                    state = WHITE_PIECE_SELECT_MENU;
+                }
+                else if(gc->piece->piece == BLACK_PAWN && gc->row == 0)
+                {
+                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
+                    pawnPromotionCell = gc;
+                    state = BLACK_PIECE_SELECT_MENU;
                 }
             }
-
             resetColourBoard(board);
             freeDragPiece(dragPiece);
 }
