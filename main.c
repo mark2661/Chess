@@ -33,6 +33,7 @@ char *options[PIECE_SELECT_MENU_OPTIONS_LENGTH] = PIECE_SELECT_MENU_OPTIONS;
 size_t options_length = PIECE_SELECT_MENU_OPTIONS_LENGTH;
 
 // TODO: Add state machine pattern
+// TODO: Clean up various memory leaks accros the programme
 int main(void)
 {
 

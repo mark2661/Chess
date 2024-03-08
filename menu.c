@@ -24,7 +24,7 @@ Menu* createMenu(char* title, char** options, size_t length, Player player)
 
         menu->menuItems[i]->messagePosition.y = item_y;
         menu->menuItems[i]->boundingBox.y = item_y - (BOUNDING_BOX_PADDING/2);
-        item_y += 50;
+        item_y += MENU_ITEM_SPACING;
     }
 
     return menu;

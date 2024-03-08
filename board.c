@@ -481,14 +481,34 @@ node getLineOfSightCells(Board* board, GridCell* gc)
     switch (piece)
     {
         case WHITE_PAWN:
+            row = gc->row;
+            col = gc->col;
+            Pair whitePawnAttackPositions[2] = {{1, -1}, {1, 1}};
+            for(size_t i=0; i<2; i++) 
+            {
+                row += whitePawnAttackPositions[i].x;
+                col += whitePawnAttackPositions[i].y;
+                
+                GridCell* cell = getCellByIndex(board, row, col);
+                if(cell != NULL && cell->piece->piece != EMPTY)
+                {
+                    addNode(head, cell);
+                }
+
+                row = gc->row;
+                col = gc->col;
+            }
+            return head;
+            break;
+
         case BLACK_PAWN:
             row = gc->row;
             col = gc->col;
-            Pair pawnAttackPositions[4] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
-            for(size_t i=0; i<4; i++) 
+            Pair blackPawnAttackPositions[2] = {{-1, -1}, {-1, 1}};
+            for(size_t i=0; i<2; i++) 
             {
-                row += pawnAttackPositions[i].x;
-                col += pawnAttackPositions[i].y;
+                row += blackPawnAttackPositions[i].x;
+                col += blackPawnAttackPositions[i].y;
                 
                 GridCell* cell = getCellByIndex(board, row, col);
                 if(cell != NULL && cell->piece->piece != EMPTY)
