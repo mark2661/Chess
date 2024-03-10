@@ -179,8 +179,9 @@ void updateBoard(Board* board, int row, int col, Piece* piece)
         else
         {
             gc->piece->piece = EMPTY;
-            Rectangle dummyRect = {0, 0, 0, 0};
-            gc->piece->textureRect = dummyRect;
+            // Rectangle dummyRect = {0, 0, 0, 0};
+            // gc->piece->textureRect = dummyRect;
+            gc->piece->textureRect = getTextureRect(gc->piece->piece);
         }
     }
 }
@@ -220,6 +221,22 @@ GridCell* getCellByIndex(Board* board, int row, int col)
 {
     if (row<0 || row>=8 || col<0 || col>=8) { return NULL; }
     return board->Board[row][col];
+}
+
+GridCell* getCellContainingPiece(Board* board, ChessPiece piece)
+{
+    for (size_t row = 0; row < 8; row++)
+    {
+        for (size_t col = 0; col < 8; col++)
+        {
+            GridCell *gc = board->Board[row][col];
+            if (gc != NULL && gc->piece != NULL && gc->piece->piece == piece)
+            {
+                return  gc;
+            }
+        }
+    }
+    return NULL;
 }
 
 Piece* getPiece(ChessPiece piece)
@@ -755,6 +772,17 @@ void freeList(node head)
     }
 }
 
+Bool contains_LL(node head, GridCell* gc)
+{
+    node cur = head;
+    while(cur != NULL)
+    {
+        if(cur->gc == gc) { return True; }
+        cur = cur->next;
+    }
+    return False;
+}
+
 Bool isValidGridCell(GridCell* gc, node head)
 {
     node cur = head;
@@ -837,6 +865,87 @@ Rectangle getTextureRect(ChessPiece piece)
     return textureClipRect;
 }
 
+Bool isInCheck(Board* board, Player player)
+{
+    GridCell* kingGridCell;
+    if(player == PLAYER_WHITE)
+    {
+        kingGridCell = getCellContainingPiece(board, WHITE_KING);
+        if(kingGridCell != NULL)
+        {
+            for(size_t row=0; row<8; row++)       
+            {
+                for(size_t col=0; col<8; col++)
+                {
+                    GridCell* gc = getCellByIndex(board, row, col);
+                    if(gc != NULL && gc->piece != NULL && isBlackPiece(gc->piece))
+                    {
+                        node enemyCaptureCells = getCaptureCells(board, gc);
+                        if (contains_LL(enemyCaptureCells, kingGridCell))
+                        {
+                            return True;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else if (player == PLAYER_BLACK)
+    {
+        kingGridCell = getCellContainingPiece(board, BLACK_KING);
+        if (kingGridCell != NULL)
+        {
+            for (size_t row = 0; row < 8; row++)
+            {
+                for (size_t col = 0; col < 8; col++)
+                {
+                    GridCell *gc = getCellByIndex(board, row, col);
+                    if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
+                    {
+                        node enemyCaptureCells = getCaptureCells(board, gc);
+                        if(contains_LL(enemyCaptureCells, kingGridCell))
+                        {
+                            return True;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return False;
+}
+
+Board* deepCopyBoard(Board* oringinalBoard)
+{
+    if(oringinalBoard == NULL) { return NULL; }
+    Board* newBoard = (Board*)malloc(sizeof(Board));
+
+    // copy colour board
+    for (size_t row = 0; row < 8; row++)
+    {
+        for(size_t col=0; col<8; col++)
+        {
+            newBoard->colourBoard[row][col] = oringinalBoard->colourBoard[row][col];
+        }
+    }
+
+    // deep copy board
+    for(size_t row=0; row<8; row++)
+    {
+        for(size_t col=0; col<8; col++)
+        {
+            GridCell* newGC = deepCopyGridCell(oringinalBoard->Board[row][col]);
+            if(newGC == NULL) { return NULL; }
+            newBoard->Board[row][col] = newGC;
+        }
+    }
+
+    newBoard->mainTexture = oringinalBoard->mainTexture;
+    newBoard->pawnSet = NULL; // test boards don't require a pawnSet ATM;
+
+    return newBoard;
+}
+
 HashNode* createHashNode(Piece* piece)
 {
     HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
@@ -898,4 +1007,26 @@ bool contains(HashSet* set, Piece* piece)
     }
 
     return false;
+}
+
+void printBoard(Board* board, char* title)
+{
+    if(board != NULL)
+    {
+        if(title != NULL)
+        {
+            printf("%s\n", title);
+        }
+        printf("********************************************************\n");
+        printf("[");
+        for(size_t i=0; i<8; i++)
+        {
+            for(size_t j=0; j<8; j++)
+            {
+                printf(" %d, ", board->Board[i][j]->piece->piece);
+            }
+            printf("]\n");
+        }
+        printf("********************************************************\n");
+    }
 }

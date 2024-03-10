@@ -7,3 +7,5 @@ typedef struct Piece{
     ChessPiece piece;
     Rectangle textureRect;
 }Piece;
+
+Piece* deepCopyPiece(Piece*);

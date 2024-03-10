@@ -10,3 +10,16 @@ void freePiece(GridCell* gc)
         gc->piece = NULL;
     }
 }
+
+GridCell* deepCopyGridCell(GridCell* originalGC)
+{
+    if(originalGC == NULL) { return NULL; }
+    GridCell* newGC = (GridCell*)malloc(sizeof(GridCell));
+    newGC->row = originalGC->row;
+    newGC->col = originalGC->col;
+    Piece* copiedPiece = deepCopyPiece(originalGC->piece);
+    if(copiedPiece == NULL) { return NULL; }
+    newGC->piece = copiedPiece;
+
+    return newGC;
+}

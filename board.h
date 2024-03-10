@@ -38,6 +38,7 @@ void updateBoard(Board*, int, int, Piece*);
 void resetColourBoard(Board*);
 GridCell* getCellByMousePosition(Board*);
 GridCell* getCellByIndex(Board*,int,int);
+GridCell* getCellContainingPiece(Board*, ChessPiece);
 Piece* getPiece(ChessPiece);
 node getValidCells(Board*, GridCell*);
 node getLineOfSightCells(Board*, GridCell*);
@@ -47,8 +48,11 @@ Bool isBlackPiece(Piece*);
 node createNode();
 node addNode(node, GridCell*);
 void freeList(node);
+Bool contains_LL(node, GridCell*);
 Bool isValidGridCell(GridCell*, node);
 Rectangle getTextureRect(ChessPiece);
+Bool isInCheck(Board*, Player);
+Board* deepCopyBoard(Board*);
 
 HashNode* createHashNode(Piece*);
 HashSet* createHashSet();
@@ -57,4 +61,6 @@ void insert(HashSet*, Piece*);
 bool contains(HashSet*, Piece*);
 
 
+// Debug functions
+void printBoard(Board*, char*);
 

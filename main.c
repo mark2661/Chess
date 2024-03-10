@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "globals.h"
 #include "board.h"
 #include "menu.h"
@@ -18,9 +19,10 @@ void freeDragPiece(DragPiece*);
 DragPiece* getDragPiece(Board*, GridCell*);
 Piece* getNewPiece(DragPiece*);
 DragPiece* startDragOperation(Board*, Player);
-void endDragOperation(Board*, DragPiece*);
-void gameIteration(Board*, Player);
+void endDragOperation(Board*, DragPiece*, Bool);
+void gameIteration(Board*, Player, Bool);
 void pieceSelectMenuIteration(Board*, Player);
+void gameIterationInCheck(Board*, Player);
 
 Bool dragging = False;
 GameState state = WHITE_IN_PLAY;
@@ -31,6 +33,10 @@ GridCell* pawnPromotionCell = NULL;
 
 char *options[PIECE_SELECT_MENU_OPTIONS_LENGTH] = PIECE_SELECT_MENU_OPTIONS;
 size_t options_length = PIECE_SELECT_MENU_OPTIONS_LENGTH;
+
+// DEBUG
+int count = 0;
+// DEBUG
 
 // TODO: Add state machine pattern
 // TODO: Clean up various memory leaks accros the programme
@@ -52,15 +58,17 @@ int main(void)
         switch (state)
         {
         case WHITE_IN_PLAY:
-            gameIteration(&board, PLAYER_WHITE);
+            gameIteration(&board, PLAYER_WHITE, False);
             break;
         case BLACK_IN_PLAY: 
-            gameIteration(&board, PLAYER_BLACK);
+            gameIteration(&board, PLAYER_BLACK, False);
             break;
         // TODO: handle check conditions
         case WHITE_IN_CHECK:
+            // gameIteration(&board, PLAYER_WHITE, True);
             break;
         case BLACK_IN_CHECK:
+            // gameIteration(&board, PLAYER_BLACK, True);
             break;
         case WHITE_PIECE_SELECT_MENU:
             pieceSelectMenuIteration(&board, PLAYER_WHITE);
@@ -80,7 +88,7 @@ int main(void)
     return 0;
 }
 
-void gameIteration(Board* board, Player player)
+void gameIteration(Board* board, Player player, Bool inCheck)
 {
 
     static DragPiece* dragPiece = NULL;
@@ -92,7 +100,7 @@ void gameIteration(Board* board, Player player)
 
     else if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && dragging && dragPiece != NULL)
     {
-        endDragOperation(board, dragPiece);
+        endDragOperation(board, dragPiece, inCheck);
         dragPiece = NULL;
     }
 
@@ -199,6 +207,9 @@ DragPiece* startDragOperation(Board* board, Player player)
     GridCell *gc = getCellByMousePosition(board);
     if (gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
     {
+
+        // When I check I should Allow any move which gets the player out of check (including blocking and captures)
+
         if ((player == PLAYER_WHITE && isWhitePiece(gc->piece)) || (player == PLAYER_BLACK && isBlackPiece(gc->piece)))
         {
             dragging = True;
@@ -210,66 +221,87 @@ DragPiece* startDragOperation(Board* board, Player player)
     return NULL;
 }
 
-void endDragOperation(Board* board, DragPiece* dragPiece)
+void endDragOperation(Board* board, DragPiece* dragPiece, Bool inCheck)
 {
             dragging = False;
 
+            Bool moveAccepted = False;
             Piece *piece = getNewPiece(dragPiece);
+            Board *testBoard = deepCopyBoard(board);
 
             GridCell* gc = getCellByMousePosition(board);
-            if(gc != NULL && gc->piece != NULL)
+            if(gc != NULL && gc->piece != NULL && testBoard != NULL)
             {
                 // Move to empty cell
                 if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
                 {
-                    updateBoard(board, gc->row, gc->col, piece);
-                    if (state == WHITE_IN_PLAY)
+                    updateBoard(testBoard, gc->row, gc->col, piece);
+                    if(!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
                     {
-                        state = BLACK_IN_PLAY;
+                        // Accept move
+                        updateBoard(board, gc->row, gc->col, piece);
+                        state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+
+                        moveAccepted = True;
                     }
-                    else if (state == BLACK_IN_PLAY)
-                    {
-                        state = WHITE_IN_PLAY;
-                    }
+                    
                 }
                 // Capture piece and move to cell
                 else if (gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
                 {
-                    // remove captured piece
-                    freePiece(gc);
-                    updateBoard(board, gc->row, gc->col, piece);
-                    if (state == WHITE_IN_PLAY)
+                    updateBoard(testBoard, gc->row, gc->col, piece);
+                    if(!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
                     {
-                        state = BLACK_IN_PLAY;
-                    }
-                    else if (state == BLACK_IN_PLAY)
-                    {
-                        state = WHITE_IN_PLAY;
-                    }
-                }
-                // Invalid move return to origin cell
-                else
-                {
-                    gc = getCellByIndex(board, dragPiece->originalPosition.y, dragPiece->originalPosition.x);
-                    if (gc != NULL)
-                    {
+                        // remove captured piece
+                        freePiece(gc);
                         updateBoard(board, gc->row, gc->col, piece);
+                        state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                        moveAccepted = True;
                     }
+               }
+               // Invalid move return to origin cell
+               if (!moveAccepted)
+               {
+
+                   GridCell *originalGridCell = getCellByIndex(board, dragPiece->originalPosition.x, dragPiece->originalPosition.y);
+                   if (originalGridCell != NULL)
+                   {
+                       updateBoard(board, originalGridCell->row, originalGridCell->col, piece);
+                   }
                 }
 
-                if(gc->piece->piece == WHITE_PAWN && gc->row == 7)
-                {
-                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
-                    pawnPromotionCell = gc;
-                    state = WHITE_PIECE_SELECT_MENU;
-                }
-                else if(gc->piece->piece == BLACK_PAWN && gc->row == 0)
-                {
-                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
-                    pawnPromotionCell = gc;
-                    state = BLACK_PIECE_SELECT_MENU;
-                }
+                // GameState priorState = state;
+
+                // if (isInCheck(board, PLAYER_WHITE))
+                // {
+                //     state = WHITE_IN_CHECK;
+                // }
+                // else if (isInCheck(board, PLAYER_BLACK))
+                // {
+                //     state = BLACK_IN_CHECK;
+                // }
+                // else { state = priorState; }
+
+                // TODO: create a function which encapsulates all the logic associated with state transition
+                // if (gc->piece->piece == WHITE_PAWN && gc->row == 7)
+                // {
+                //     menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
+                //     pawnPromotionCell = gc;
+                //     state = WHITE_PIECE_SELECT_MENU;
+                // }
+                // else if(gc->piece->piece == BLACK_PAWN && gc->row == 0)
+                // {
+                //     menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
+                //     pawnPromotionCell = gc;
+                //     state = BLACK_PIECE_SELECT_MENU;
+                // }
+                // printBoard(board, "Main board");
             }
+
             resetColourBoard(board);
             freeDragPiece(dragPiece);
+}
+
+void gameIterationInCheck(Board* board, Player player)
+{
 }

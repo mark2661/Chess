@@ -11,3 +11,4 @@ typedef struct GridCell
 }GridCell;
 
 void freePiece(GridCell*);
+GridCell* deepCopyGridCell(GridCell*);
