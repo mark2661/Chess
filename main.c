@@ -25,7 +25,6 @@ void pieceSelectMenuIteration(Board*, Player);
 
 Bool dragging = False;
 GameState state = WHITE_IN_PLAY;
-// GameState state = WHITE_PIECE_SELECT_MENU;
 
 Menu* menu = NULL;
 GridCell* pawnPromotionCell = NULL;
@@ -35,6 +34,7 @@ size_t options_length = PIECE_SELECT_MENU_OPTIONS_LENGTH;
 
 // DEBUG
 int count = 0;
+// GameState state = WHITE_PIECE_SELECT_MENU;
 // DEBUG
 
 int main(void)
@@ -59,13 +59,6 @@ int main(void)
             break;
         case BLACK_IN_PLAY: 
             gameIteration(&board, PLAYER_BLACK);
-            break;
-        // TODO: handle check conditions
-        case WHITE_IN_CHECK:
-            // gameIteration(&board, PLAYER_WHITE);
-            break;
-        case BLACK_IN_CHECK:
-            // gameIteration(&board, PLAYER_BLACK);
             break;
         case WHITE_PIECE_SELECT_MENU:
             pieceSelectMenuIteration(&board, PLAYER_WHITE);
@@ -263,6 +256,8 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                if (!moveAccepted)
                {
 
+                   // TODO: Fix bug where a pawn's initial move is invalid but it is still added to the pawnSet meaning it
+                   // no longer has the option of moving two squares in front
                    GridCell *originalGridCell = getCellByIndex(board, dragPiece->originalPosition.x, dragPiece->originalPosition.y);
                    if (originalGridCell != NULL)
                    {
