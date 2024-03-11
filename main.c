@@ -19,10 +19,9 @@ void freeDragPiece(DragPiece*);
 DragPiece* getDragPiece(Board*, GridCell*);
 Piece* getNewPiece(DragPiece*);
 DragPiece* startDragOperation(Board*, Player);
-void endDragOperation(Board*, DragPiece*, Bool);
-void gameIteration(Board*, Player, Bool);
+void endDragOperation(Board*, DragPiece*);
+void gameIteration(Board*, Player);
 void pieceSelectMenuIteration(Board*, Player);
-void gameIterationInCheck(Board*, Player);
 
 Bool dragging = False;
 GameState state = WHITE_IN_PLAY;
@@ -58,17 +57,17 @@ int main(void)
         switch (state)
         {
         case WHITE_IN_PLAY:
-            gameIteration(&board, PLAYER_WHITE, False);
+            gameIteration(&board, PLAYER_WHITE);
             break;
         case BLACK_IN_PLAY: 
-            gameIteration(&board, PLAYER_BLACK, False);
+            gameIteration(&board, PLAYER_BLACK);
             break;
         // TODO: handle check conditions
         case WHITE_IN_CHECK:
-            // gameIteration(&board, PLAYER_WHITE, True);
+            // gameIteration(&board, PLAYER_WHITE);
             break;
         case BLACK_IN_CHECK:
-            // gameIteration(&board, PLAYER_BLACK, True);
+            // gameIteration(&board, PLAYER_BLACK);
             break;
         case WHITE_PIECE_SELECT_MENU:
             pieceSelectMenuIteration(&board, PLAYER_WHITE);
@@ -88,7 +87,7 @@ int main(void)
     return 0;
 }
 
-void gameIteration(Board* board, Player player, Bool inCheck)
+void gameIteration(Board* board, Player player)
 {
 
     static DragPiece* dragPiece = NULL;
@@ -100,7 +99,7 @@ void gameIteration(Board* board, Player player, Bool inCheck)
 
     else if (IsMouseButtonUp(MOUSE_BUTTON_LEFT) && dragging && dragPiece != NULL)
     {
-        endDragOperation(board, dragPiece, inCheck);
+        endDragOperation(board, dragPiece);
         dragPiece = NULL;
     }
 
@@ -221,12 +220,15 @@ DragPiece* startDragOperation(Board* board, Player player)
     return NULL;
 }
 
-void endDragOperation(Board* board, DragPiece* dragPiece, Bool inCheck)
+void endDragOperation(Board* board, DragPiece* dragPiece)
 {
             dragging = False;
 
             Bool moveAccepted = False;
             Piece *piece = getNewPiece(dragPiece);
+            Piece* testPiece = deepCopyPiece(piece);
+            // TODO: add functions to clean up memory assosiated with Board deep copies
+            // causing memeory leaks ATM
             Board *testBoard = deepCopyBoard(board);
 
             GridCell* gc = getCellByMousePosition(board);
@@ -235,7 +237,8 @@ void endDragOperation(Board* board, DragPiece* dragPiece, Bool inCheck)
                 // Move to empty cell
                 if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
                 {
-                    updateBoard(testBoard, gc->row, gc->col, piece);
+                    // TODO: edit valid and capture cells of piece to only show moves which would resolve the check condtition
+                    updateBoard(testBoard, gc->row, gc->col, testPiece);
                     if(!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
                     {
                         // Accept move
@@ -244,12 +247,11 @@ void endDragOperation(Board* board, DragPiece* dragPiece, Bool inCheck)
 
                         moveAccepted = True;
                     }
-                    
                 }
                 // Capture piece and move to cell
                 else if (gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
                 {
-                    updateBoard(testBoard, gc->row, gc->col, piece);
+                    updateBoard(testBoard, gc->row, gc->col, testPiece);
                     if(!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
                     {
                         // remove captured piece
@@ -258,7 +260,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece, Bool inCheck)
                         state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                         moveAccepted = True;
                     }
-               }
+              }
                // Invalid move return to origin cell
                if (!moveAccepted)
                {
@@ -270,38 +272,23 @@ void endDragOperation(Board* board, DragPiece* dragPiece, Bool inCheck)
                    }
                 }
 
-                // GameState priorState = state;
-
-                // if (isInCheck(board, PLAYER_WHITE))
-                // {
-                //     state = WHITE_IN_CHECK;
-                // }
-                // else if (isInCheck(board, PLAYER_BLACK))
-                // {
-                //     state = BLACK_IN_CHECK;
-                // }
-                // else { state = priorState; }
-
                 // TODO: create a function which encapsulates all the logic associated with state transition
-                // if (gc->piece->piece == WHITE_PAWN && gc->row == 7)
-                // {
-                //     menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
-                //     pawnPromotionCell = gc;
-                //     state = WHITE_PIECE_SELECT_MENU;
-                // }
-                // else if(gc->piece->piece == BLACK_PAWN && gc->row == 0)
-                // {
-                //     menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
-                //     pawnPromotionCell = gc;
-                //     state = BLACK_PIECE_SELECT_MENU;
-                // }
-                // printBoard(board, "Main board");
+                // maybe don't need to do this anymore?
+                if (gc->piece->piece == WHITE_PAWN && gc->row == 7)
+                {
+                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
+                    pawnPromotionCell = gc;
+                    state = WHITE_PIECE_SELECT_MENU;
+                }
+                else if(gc->piece->piece == BLACK_PAWN && gc->row == 0)
+                {
+                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
+                    pawnPromotionCell = gc;
+                    state = BLACK_PIECE_SELECT_MENU;
+                }
             }
 
+            if(testBoard != NULL) { freeBoard(testBoard); }
+            if(dragPiece != NULL) { freeDragPiece(dragPiece); }
             resetColourBoard(board);
-            freeDragPiece(dragPiece);
-}
-
-void gameIterationInCheck(Board* board, Player player)
-{
 }

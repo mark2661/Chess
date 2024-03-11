@@ -946,6 +946,26 @@ Board* deepCopyBoard(Board* oringinalBoard)
     return newBoard;
 }
 
+void freeBoard(Board* board)
+{
+    if(board == NULL) { return; }
+
+    // Free grid cell pointers
+    for(size_t row=0; row<8; row++)
+    {
+        for(size_t col=0; col<8; col++)
+        {
+            freeGridCell(board->Board[row][col]);
+            board->Board[row][col] = NULL;
+        }
+    }
+
+    // Free pawn set (hash set)
+    freeHashSet(board->pawnSet);
+
+    free(board);
+}
+
 HashNode* createHashNode(Piece* piece)
 {
     HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
@@ -974,6 +994,33 @@ HashSet* createHashSet(){
     }
 
     return set;
+}
+
+void freeHashSet(HashSet* set)
+{
+    if (set == NULL) { return; }
+    for(size_t i=0; i<SIZE; i++)
+    {
+        HashNode *cur = set->buckets[i];
+        HashNode *next = NULL;
+        while (cur != NULL)
+        {
+            // Free piece struct contained in bucket
+            if (cur->piece != NULL)
+            {
+                free(cur->piece);
+                cur->piece = NULL;
+            }
+
+            // Free node pointer
+            next = cur->next;
+            free(cur);
+            cur = next;
+        }
+        set->buckets[i] = NULL;
+    }
+
+    free(set);
 }
 
 int hash(int key)
@@ -1009,6 +1056,7 @@ bool contains(HashSet* set, Piece* piece)
     return false;
 }
 
+// ###################################################### DEBUG FUNCTIONS ###################################################################
 void printBoard(Board* board, char* title)
 {
     if(board != NULL)
@@ -1030,3 +1078,4 @@ void printBoard(Board* board, char* title)
         printf("********************************************************\n");
     }
 }
+// ###################################################### END DEBUG FUNCTIONS ################################################################

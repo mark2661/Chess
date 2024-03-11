@@ -53,9 +53,11 @@ Bool isValidGridCell(GridCell*, node);
 Rectangle getTextureRect(ChessPiece);
 Bool isInCheck(Board*, Player);
 Board* deepCopyBoard(Board*);
+void freeBoard(Board*);
 
 HashNode* createHashNode(Piece*);
 HashSet* createHashSet();
+void freeHashSet(HashSet*);
 int hash(int);
 void insert(HashSet*, Piece*);
 bool contains(HashSet*, Piece*);

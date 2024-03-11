@@ -11,6 +11,14 @@ void freePiece(GridCell* gc)
     }
 }
 
+
+void freeGridCell(GridCell* gc)
+{
+    if(gc == NULL) { return; }
+    freePiece(gc);
+    free(gc);
+}
+
 GridCell* deepCopyGridCell(GridCell* originalGC)
 {
     if(originalGC == NULL) { return NULL; }
