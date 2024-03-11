@@ -45,16 +45,21 @@ node getLineOfSightCells(Board*, GridCell*);
 node getCaptureCells(Board*, GridCell*);
 Bool isWhitePiece(Piece*);
 Bool isBlackPiece(Piece*);
+Rectangle getTextureRect(ChessPiece);
+Bool isInCheck(Board*, Player);
+Bool testCheck(Board*, GridCell*, GridCell*, Player);
+Board* deepCopyBoard(Board*);
+void freeBoard(Board*);
+
+// Linked List
 node createNode();
 node addNode(node, GridCell*);
 void freeList(node);
 Bool contains_LL(node, GridCell*);
+node remove_LL(node, GridCell*);
 Bool isValidGridCell(GridCell*, node);
-Rectangle getTextureRect(ChessPiece);
-Bool isInCheck(Board*, Player);
-Board* deepCopyBoard(Board*);
-void freeBoard(Board*);
 
+// Hash Set
 HashNode* createHashNode(Piece*);
 HashSet* createHashSet();
 void freeHashSet(HashSet*);

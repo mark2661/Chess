@@ -314,7 +314,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                 GridCell* cell = getCellByIndex(board, currentCell->row + 1, currentCell->col);
                 if (cell != NULL)
                 {
-                    addNode(head, cell);
+                    GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
+                    if (!testCheck(board, originalCell, cell, PLAYER_WHITE))
+                    {
+                        addNode(head, cell);
+                    }
                 }
                 // forward 2 cell
                 if (!contains(board->pawnSet, currentCell->piece))
@@ -322,7 +326,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                     cell = getCellByIndex(board, currentCell->row + 2, currentCell->col);
                     if (cell != NULL)
                     {
-                        addNode(head, cell);
+                        GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
+                        if (!testCheck(board, originalCell, cell, PLAYER_WHITE))
+                        {
+                            addNode(head, cell);
+                        }
                     }
                 }
                 insert(board->pawnSet, currentCell->piece);
@@ -336,7 +344,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                 GridCell* cell = getCellByIndex(board, currentCell->row - 1, currentCell->col);
                 if (cell != NULL)
                 {
-                    addNode(head, cell);
+                    GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
+                    if (!testCheck(board, originalCell, cell, PLAYER_BLACK))
+                    {
+                        addNode(head, cell);
+                    }
                 }
                 // forward 2 cell
                 if (!contains(board->pawnSet, currentCell->piece))
@@ -344,7 +356,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                     cell = getCellByIndex(board, currentCell->row - 2, currentCell->col);
                     if (cell != NULL)
                     {
-                        addNode(head, cell);
+                        GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
+                        if (!testCheck(board, originalCell, cell, PLAYER_BLACK))
+                        {
+                            addNode(head, cell);
+                        }
                     }
                 }
                 insert(board->pawnSet, currentCell->piece);
@@ -366,7 +382,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                         GridCell *cell = getCellByIndex(board, row, col);
                         if (cell != NULL && cell->piece->piece == EMPTY)
                         {
-                            addNode(head, cell);
+                            GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
+                            if (!testCheck(board, originalCell, cell, (pieceType == WHITE_CASTLE) ? PLAYER_WHITE : PLAYER_BLACK))
+                            {
+                                addNode(head, cell);
+                            }
                         }
                         else
                         {
@@ -394,7 +414,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                         GridCell *cell = getCellByIndex(board, row, col);
                         if (cell != NULL && cell->piece->piece == EMPTY)
                         {
-                            addNode(head, cell);
+                            GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
+                            if (!testCheck(board, originalCell, cell, (pieceType == WHITE_BISHOP) ? PLAYER_WHITE : PLAYER_BLACK))
+                            {
+                                addNode(head, cell);
+                            }
                         }
                         else
                         {
@@ -421,7 +445,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                     GridCell *cell = getCellByIndex(board, row, col);
                     if (cell != NULL && cell->piece->piece == EMPTY)
                     {
-                        addNode(head, cell);
+                        GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
+                        if (!testCheck(board, originalCell, cell, (pieceType == WHITE_KNIGHT) ? PLAYER_WHITE : PLAYER_BLACK))
+                        {
+                            addNode(head, cell);
+                        }
                     }
 
                     row = currentCell->row;
@@ -445,7 +473,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                         GridCell *cell = getCellByIndex(board, row, col);
                         if (cell != NULL && cell->piece->piece == EMPTY)
                         {
-                            addNode(head, cell);
+                            GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
+                            if (!testCheck(board, originalCell, cell, (pieceType == WHITE_QUEEN) ? PLAYER_WHITE : PLAYER_BLACK))
+                            {
+                                addNode(head, cell);
+                            }
                         }
                         else
                         {
@@ -472,7 +504,11 @@ node getValidCells(Board* board, GridCell* currentCell)
                     GridCell *cell = getCellByIndex(board, row, col);
                     if (cell != NULL && cell->piece->piece == EMPTY)
                     {
-                        addNode(head, cell);
+                        GridCell* originalCell = getCellByIndex(board, currentCell->row, currentCell->col); 
+                        if(!testCheck(board, originalCell, cell, (pieceType == WHITE_KING) ? PLAYER_WHITE : PLAYER_BLACK))
+                        {
+                            addNode(head, cell);
+                        }
                     }
 
                     row = currentCell->row;
@@ -783,6 +819,39 @@ Bool contains_LL(node head, GridCell* gc)
     return False;
 }
 
+node remove_LL(node head, GridCell* gc)
+{
+    if(head == NULL || gc == NULL) { return NULL; }
+
+    node dummy = createNode();
+    dummy->next = head;
+    node back = dummy;
+    node front = head;
+    while(front != NULL)
+    {
+        if(front->gc != NULL && front->gc->row == gc->row && front->gc->col == gc->col)
+        {
+            node n = front->next;
+
+            front->next = NULL;
+            front->gc = NULL;
+
+            if(n != NULL)
+            {
+                back->next = n;
+            }
+
+            free(front);
+            return dummy->next;
+        }
+
+        back = front;
+        front = front->next;
+    }
+
+    return dummy->next;
+}
+
 Bool isValidGridCell(GridCell* gc, node head)
 {
     node cur = head;
@@ -913,6 +982,29 @@ Bool isInCheck(Board* board, Player player)
         }
     }
     return False;
+}
+
+Bool testCheck(Board* board, GridCell* originCell, GridCell* destinationCell, Player player)
+{
+    if(board == NULL || originCell == NULL || originCell->piece == NULL || destinationCell == NULL) 
+    { 
+        // TODO: Handle error properly
+        printf("ERROR: board.c testCheck\n");
+        return False;
+    }
+
+    Board *testBoard = deepCopyBoard(board);
+    Piece *testPiece = deepCopyPiece(originCell->piece);
+
+    // Remove old piece
+    updateBoard(testBoard, originCell->row, originCell->col, NULL);
+    // Add piece to test positon
+    updateBoard(testBoard, destinationCell->row, destinationCell->col, testPiece);
+
+    Bool res = isInCheck(testBoard, player);
+
+    freeBoard(testBoard);
+    return res;
 }
 
 Board* deepCopyBoard(Board* oringinalBoard)

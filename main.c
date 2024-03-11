@@ -37,8 +37,6 @@ size_t options_length = PIECE_SELECT_MENU_OPTIONS_LENGTH;
 int count = 0;
 // DEBUG
 
-// TODO: Add state machine pattern
-// TODO: Clean up various memory leaks accros the programme
 int main(void)
 {
 
@@ -222,14 +220,13 @@ DragPiece* startDragOperation(Board* board, Player player)
 
 void endDragOperation(Board* board, DragPiece* dragPiece)
 {
-            dragging = False;
+            if(board == NULL || dragPiece == NULL) { return; }
 
+            dragging = False;
             Bool moveAccepted = False;
-            Piece *piece = getNewPiece(dragPiece);
-            Piece* testPiece = deepCopyPiece(piece);
-            // TODO: add functions to clean up memory assosiated with Board deep copies
-            // causing memeory leaks ATM
-            Board *testBoard = deepCopyBoard(board);
+            Piece* piece = getNewPiece(dragPiece);
+            Piece* testPiece = deepCopyPiece(piece); // DO NOT REMOVE the testBoard must only be updated using the testPiece variable (a copy of the piece variable)
+            Board* testBoard = deepCopyBoard(board);
 
             GridCell* gc = getCellByMousePosition(board);
             if(gc != NULL && gc->piece != NULL && testBoard != NULL)
@@ -247,6 +244,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
 
                         moveAccepted = True;
                     }
+                    
                 }
                 // Capture piece and move to cell
                 else if (gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
