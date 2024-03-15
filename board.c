@@ -174,14 +174,14 @@ void updateBoard(Board* board, int row, int col, Piece* piece)
         if(piece != NULL)
         {
             // free(gc->piece);
-            gc->piece = piece;
+            // gc->piece = piece;
+            gc->piece = deepCopyPiece(piece);
         }
         else
         {
-            gc->piece->piece = EMPTY;
-            // Rectangle dummyRect = {0, 0, 0, 0};
-            // gc->piece->textureRect = dummyRect;
-            gc->piece->textureRect = getTextureRect(gc->piece->piece);
+            gc->piece = getPiece(EMPTY);
+            // gc->piece->piece = EMPTY;
+            // gc->piece->textureRect = getTextureRect(gc->piece->piece);
         }
     }
 }
@@ -239,6 +239,59 @@ GridCell* getCellContainingPiece(Board* board, ChessPiece piece)
     return NULL;
 }
 
+GridCellContainer* getAllCellsContainingPiece(Board* board, ChessPiece pieceType)
+{
+    if(board == NULL) { return NULL; }
+    size_t count = 0;
+
+    // Count the amount of those pieces on the board (used for dymanic memory allocation)
+    for(size_t row=0; row<8; row++)
+    {
+        for(size_t col=0; col<8; col++)
+        {
+            if(board->Board[row][col]->piece->piece == pieceType)
+            {
+                count += 1;
+            }
+        }
+    }
+
+    if (count == 0) { return NULL; }
+
+    GridCellContainer* container = (GridCellContainer*)malloc(sizeof(GridCellContainer));
+    container->size = count;
+    container->cellsArray = (GridCell**)malloc(container->size*sizeof(GridCell*));
+    int offset = 0;
+    for (size_t row = 0; row < 8; row++)
+    {
+        for(size_t col=0; col<8; col++)
+        {
+            if(board->Board[row][col]->piece->piece == pieceType)
+            {
+                container->cellsArray[offset] = board->Board[row][col];
+                offset += 1; 
+            }
+        }
+    }
+
+    return container;
+}
+
+size_t countNumberOfPieceTypeOnBoard(Board* board, ChessPiece pieceType)
+{
+    size_t count = 0;
+
+    for(size_t row=0; row<8; row++)
+    {
+        for(size_t col=0; col<8; col++)
+        {
+           if(board->Board[row][col]->piece->piece == pieceType) { count += 1; }
+        }
+    }
+
+    return count;
+}
+
 Piece* getPiece(ChessPiece piece)
 {
     Piece* newPiece = (Piece*)malloc(sizeof(Piece));
@@ -284,12 +337,17 @@ Piece* getPiece(ChessPiece piece)
         newPiece->piece = BLACK_QUEEN;
         break;
 
+    // EMPTY CELL
+    case EMPTY:
+        newPiece->piece = EMPTY;
+        break;
     default:
         return NULL;
         break;
     }
 
     newPiece->id = getID();
+    newPiece->moves = 0;
     newPiece->textureRect = getTextureRect(newPiece->piece);
     return newPiece;
 }
@@ -751,6 +809,11 @@ node getCaptureCells(Board* board, GridCell* gc)
     }
 }
 
+node getCastlingCells(Board* board, GridCell* gc)
+{
+
+}
+
 Bool isWhitePiece(Piece* p)
 {
     return (p->piece >= WHITE_PAWN && p->piece <= WHITE_KING);
@@ -759,6 +822,164 @@ Bool isWhitePiece(Piece* p)
 Bool isBlackPiece(Piece* p)
 {
     return (p->piece >= BLACK_PAWN && p->piece <= BLACK_KING);
+}
+
+Bool isAllowedToCastle(Board* board, GridCell* gc)
+{
+    if (board == NULL || gc == NULL)
+    {
+        // TODO: handle error properly
+        printf("Error board.c isAllowedToCastle\n");
+    }
+
+    Piece* piece = gc->piece;
+    
+    if(piece->piece == WHITE_KING || piece->piece == BLACK_KING)
+    {
+        // if the king has already moved before or there are no castle's on the board
+        if (piece->moves >= 1 || countNumberOfPieceTypeOnBoard(board, (piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE) < 1) { return False; }
+
+        // locate the castle cells
+        // GridCellContainer* castleCellsContainer = getAllCellsContainingPiece(board, (piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE);
+        GridCell* castleCells[countNumberOfPieceTypeOnBoard(board, (piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)];
+        size_t castleCellsSize = 0;
+
+        // When checking if cells between the castle and the king are empty. We can assume that we need to check the horizontal cells between
+        // the kings original position and the castles original position only (since it must be both the kings and the castles first move)
+        // e.g for the white king and the queenside castle we would check cells (e1, f1, g1)
+        // *note Pam Krabbe castling (vertical castling between a king and promoted castle) is not allowed in the FIDE rule set.
+        // (https://de-m-wikipedia-org.translate.goog/wiki/Pam-Krabb%C3%A9-Rochade?_x_tr_sl=auto&_x_tr_tl=en&_x_tr_hl=en)
+
+        return (isAllowedToCastleCheckLeft(board, gc) || isAllowedToCastleCheckRight(board, gc));
+    }
+
+    return False;
+}
+
+Bool isAllowedToCastleCheckLeft(Board* board, GridCell* gc)
+{
+    // TODO: Add error handling instead of just returning
+    if(board == NULL || gc == NULL) { return False; }
+
+    Piece* piece = gc->piece;
+    int row; 
+    int col;
+    Pair castlingCheckDirectionsLeft = {0, -1};
+    Bool emptySpaceBetweenKingAndCastle = False;
+    Bool kingCanMoveWithoutGoingThroughCheck = True;
+
+    // check left spaces between king and castle are empty
+    row = gc->row;
+    col = gc->col;
+    row += castlingCheckDirectionsLeft.x;
+    col += castlingCheckDirectionsLeft.y;
+
+    while (row >= 0 && row < 8 && col >= 0 && col < 8)
+    {
+        GridCell *cell = getCellByIndex(board, row, col);
+        if (cell->piece->piece == ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE))
+        {
+            emptySpaceBetweenKingAndCastle |= True;
+            // castleCells[castleCellsSize++] = cell;
+            break;
+        }
+        else if (cell->piece->piece != EMPTY)
+        {
+            emptySpaceBetweenKingAndCastle |= False;
+            break;
+        }
+        row += castlingCheckDirectionsLeft.x;
+        col += castlingCheckDirectionsLeft.y;
+    }
+
+    if(!emptySpaceBetweenKingAndCastle) { return False; }
+
+    // check left for any cells which will move the king through check
+    row = gc->row;
+    col = gc->col;
+
+    Board *testBoard = deepCopyBoard(board);
+
+    GridCell *testKingCell = getCellByIndex(testBoard, row, col);
+    Piece *testKing = deepCopyPiece(testKingCell->piece);
+
+    while ((row >= 0 && row < 8 && col >= 0 && col < 8) && (board->Board[row][col]->piece->piece != ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)))
+    {
+        updateBoard(testBoard, row, col, testKing);
+        if (isInCheck(testBoard, ((piece->piece == WHITE_KING) ? PLAYER_WHITE : PLAYER_BLACK)))
+        {
+            kingCanMoveWithoutGoingThroughCheck &= False;
+            break;
+        }
+
+        updateBoard(testBoard, row, col, NULL);
+        row += castlingCheckDirectionsLeft.x;
+        col += castlingCheckDirectionsLeft.y;
+    }
+
+    return (kingCanMoveWithoutGoingThroughCheck && emptySpaceBetweenKingAndCastle);
+}
+
+Bool isAllowedToCastleCheckRight(Board* board, GridCell* gc)
+{
+    // TODO: Add error handling instead of just returning
+    if(board == NULL || gc == NULL) { return False; }
+
+    Piece* piece = gc->piece;
+    int row; 
+    int col;
+    Pair castlingCheckDirectionsRight = {0, 1};
+    Bool emptySpaceBetweenKingAndCastle = False;
+    Bool kingCanMoveWithoutGoingThroughCheck = True;
+
+    // check right
+    row = gc->row;
+    col = gc->col;
+    row += castlingCheckDirectionsRight.x;
+    col += castlingCheckDirectionsRight.y;
+
+    while (row >= 0 && row < 8 && col >= 0 && col < 8)
+    {
+        GridCell *cell = getCellByIndex(board, row, col);
+        if (cell->piece->piece == ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE))
+        {
+            emptySpaceBetweenKingAndCastle |= True;
+            // castleCells[castleCellsSize++] = cell;
+            break;
+        }
+        else if (cell->piece->piece != EMPTY)
+        {
+            emptySpaceBetweenKingAndCastle |= False;
+            break;
+        }
+        row += castlingCheckDirectionsRight.x;
+        col += castlingCheckDirectionsRight.y;
+    }
+
+    if(!emptySpaceBetweenKingAndCastle) { return False; }
+
+    // check right
+    row = gc->row;
+    col = gc->col;
+    Board* testBoard = deepCopyBoard(board);
+    GridCell* testKingCell = getCellByIndex(testBoard, row, col);
+    Piece* testKing = deepCopyPiece(testKingCell->piece);
+
+    while ((row >= 0 && row < 8 && col >= 0 && col < 8) && (board->Board[row][col]->piece->piece != ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)))
+    {
+        updateBoard(testBoard, row, col, testKing);
+        if (isInCheck(testBoard, (piece->piece == WHITE_KING) ? PLAYER_WHITE : PLAYER_BLACK))
+        {
+            kingCanMoveWithoutGoingThroughCheck &= False;
+            break;
+        }
+
+        updateBoard(testBoard, row, col, NULL);
+        row += castlingCheckDirectionsRight.x;
+        col += castlingCheckDirectionsRight.y;
+    }
+
+    return (kingCanMoveWithoutGoingThroughCheck && emptySpaceBetweenKingAndCastle);
 }
 
 node createNode()
@@ -1024,7 +1245,7 @@ Board* deepCopyBoard(Board* oringinalBoard)
     {
         for(size_t col=0; col<8; col++)
         {
-            GridCell* newGC = deepCopyGridCell(oringinalBoard->Board[row][col]);
+            GridCell* newGC = deepCopyGridCell(oringinalBoard->Board[row][col]); //<-- BUG(1) newGC is NULL
             if(newGC == NULL) { return NULL; }
             newBoard->Board[row][col] = newGC;
         }

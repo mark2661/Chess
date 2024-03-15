@@ -168,6 +168,7 @@ DragPiece* getDragPiece(Board* board, GridCell* gc)
     DragPiece* dragPiece = (DragPiece*)malloc(sizeof(DragPiece));
     dragPiece->piece.id = gc->piece->id;
     dragPiece->piece.piece = gc->piece->piece;
+    dragPiece->piece.moves = gc->piece->moves;
     dragPiece->piece.textureRect = gc->piece->textureRect;
     Vector2 originalPosition = {gc->row, gc->col};
     dragPiece->originalPosition = originalPosition;
@@ -185,6 +186,7 @@ Piece* getNewPiece(DragPiece* dragPiece)
         Piece *piece = (Piece *)malloc(sizeof(Piece));
         piece->id = dragPiece->piece.id;
         piece->piece = dragPiece->piece.piece;
+        piece->moves = dragPiece->piece.moves;
         piece->textureRect = dragPiece->piece.textureRect;
 
         return piece;
@@ -213,6 +215,7 @@ DragPiece* startDragOperation(Board* board, Player player)
 
 void endDragOperation(Board* board, DragPiece* dragPiece)
 {
+            // TODO: Implement logic for special moves
             if(board == NULL || dragPiece == NULL) { return; }
 
             dragging = False;
@@ -234,7 +237,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                         // Accept move
                         updateBoard(board, gc->row, gc->col, piece);
                         state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
-
                         moveAccepted = True;
                     }
                     
@@ -251,37 +253,56 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                         state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                         moveAccepted = True;
                     }
+                }
+
+
+              // TODO: fix bug, piece moves count not updating, think it's because pieces are being deep copied multiple times
+              if (moveAccepted) 
+              {  
+                incrementPieceMoveCount(gc->piece);
               }
                // Invalid move return to origin cell
-               if (!moveAccepted)
-               {
+              else
+              {
 
-                   // TODO: Fix bug where a pawn's initial move is invalid but it is still added to the pawnSet meaning it
-                   // no longer has the option of moving two squares in front
-                   GridCell *originalGridCell = getCellByIndex(board, dragPiece->originalPosition.x, dragPiece->originalPosition.y);
-                   if (originalGridCell != NULL)
-                   {
-                       updateBoard(board, originalGridCell->row, originalGridCell->col, piece);
-                   }
-                }
+                  // TODO: Fix bug where a pawn's initial move is invalid but it is still added to the pawnSet meaning it
+                  // no longer has the option of moving two squares in front
+                  GridCell *originalGridCell = getCellByIndex(board, dragPiece->originalPosition.x, dragPiece->originalPosition.y);
+                  if (originalGridCell != NULL)
+                  {
+                      updateBoard(board, originalGridCell->row, originalGridCell->col, piece);
+                  }
+              }
 
-                // TODO: create a function which encapsulates all the logic associated with state transition
-                // maybe don't need to do this anymore?
-                if (gc->piece->piece == WHITE_PAWN && gc->row == 7)
-                {
-                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
-                    pawnPromotionCell = gc;
-                    state = WHITE_PIECE_SELECT_MENU;
-                }
-                else if(gc->piece->piece == BLACK_PAWN && gc->row == 0)
-                {
-                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
-                    pawnPromotionCell = gc;
-                    state = BLACK_PIECE_SELECT_MENU;
-                }
+              // ######################################### TEST CODE ##########################################
+              Bool canCastle = isAllowedToCastle(board, getCellContainingPiece(board, WHITE_KING));
+              printf("White king can Castle: %d\n", canCastle);
+              isAllowedToCastle(board, getCellContainingPiece(board, BLACK_KING));
+              // ######################################### TEST CODE ##########################################
+
+              // TODO: create a function which encapsulates all the logic associated with state transition
+              // maybe don't need to do this anymore?
+              if (gc->piece->piece == WHITE_PAWN && gc->row == 7)
+              {
+                  menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
+                  pawnPromotionCell = gc;
+                  state = WHITE_PIECE_SELECT_MENU;
+              }
+              else if (gc->piece->piece == BLACK_PAWN && gc->row == 0)
+              {
+                  menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
+                  pawnPromotionCell = gc;
+                  state = BLACK_PIECE_SELECT_MENU;
+              }
             }
 
-            if(testBoard != NULL) { freeBoard(testBoard); }
-            if(dragPiece != NULL) { freeDragPiece(dragPiece); }
+            if (testBoard != NULL)
+            {
+                freeBoard(testBoard);
+            }
+            if (dragPiece != NULL)
+            {
+                freeDragPiece(dragPiece);
+            }
             resetColourBoard(board);
 }
