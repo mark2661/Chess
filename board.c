@@ -30,7 +30,7 @@ Board initBoard(void)
         b = !b;
     }
 
-    ChessPiece whiteBackRow[8] = {WHITE_CASTLE, WHITE_KNIGHT, WHITE_BISHOP, WHITE_KING, WHITE_QUEEN, WHITE_BISHOP, WHITE_KNIGHT, WHITE_CASTLE};
+    ChessPiece whiteBackRow[8] = {WHITE_CASTLE, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_CASTLE};
     ChessPiece blackBackRow[8] = {BLACK_CASTLE, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_CASTLE};
     // init pieces
     for(size_t col=0; col<8; col++)
@@ -39,38 +39,46 @@ Board initBoard(void)
         Piece* whitePawn = getPiece(WHITE_PAWN);
         Piece* blackPiece = getPiece(blackBackRow[col]);
         Piece* blackPawn = getPiece(BLACK_PAWN);
-        if(whitePiece)
+        // if(whitePiece)
+        if(blackPiece)
         {
             GridCell* gc = (GridCell*)malloc(sizeof(GridCell));
             gc->row = 0;
             gc->col = col;
-            gc->piece = whitePiece;
+            // gc->piece = whitePiece;
+            gc->piece = blackPiece;
             board.Board[0][col] = gc;
         }
-        if(whitePawn)
+        // if(whitePawn)
+        if(blackPawn)
         {
             GridCell *gc = (GridCell *)malloc(sizeof(GridCell));
             gc->row = 1;
             gc->col = col;
-            gc->piece = whitePawn;
+            // gc->piece = whitePawn;
+            gc->piece = blackPawn;
             board.Board[1][col] = gc;
         }
 
-        if(blackPiece)
+        // if(blackPiece)
+        if(whitePiece)
         {
             GridCell *gc = (GridCell *)malloc(sizeof(GridCell));
             gc->row = 7;
             gc->col = col;
-            gc->piece = blackPiece;
+            // gc->piece = blackPiece;
+            gc->piece = whitePiece;
             board.Board[7][col] = gc;
         }
 
-        if(blackPawn)
+        // if(blackPawn)
+        if(whitePawn)
         {
             GridCell *gc = (GridCell *)malloc(sizeof(GridCell));
             gc->row = 6;
             gc->col = col;
-            gc->piece = blackPawn;
+            // gc->piece = blackPawn;
+            gc->piece = whitePawn;
             board.Board[6][col] = gc;
          }
     }
@@ -122,6 +130,11 @@ void drawBoard(Board board)
                   else if (board.colourBoard[r][c] == 3)
                   {
                       DrawRectangle(i, j, GRID_CELL_WIDTH, GRID_CELL_HEIGHT, RED);
+                  }
+
+                  else if(board.colourBoard[r][c] == 4)
+                  {
+                      DrawRectangle(i, j, GRID_CELL_WIDTH, GRID_CELL_HEIGHT, ORANGE);
                   }
                   r += 1;
               }
@@ -367,25 +380,25 @@ node getValidCells(Board* board, GridCell* currentCell)
         // Scope needed to prevent redefinition error involving GridCell* cell
             {
                 // forward cell
-                GridCell* cell = getCellByIndex(board, currentCell->row + 1, currentCell->col);
+                GridCell* cell = getCellByIndex(board, currentCell->row - 1, currentCell->col);
                 if (cell != NULL)
                 {
                     GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                     if (!testCheck(board, originalCell, cell, PLAYER_WHITE))
                     {
-                        addNode(head, cell);
+                        head = addNode(head, cell);
                     }
                 }
                 // forward 2 cell
                 if (!contains(board->pawnSet, currentCell->piece))
                 {
-                    cell = getCellByIndex(board, currentCell->row + 2, currentCell->col);
+                    cell = getCellByIndex(board, currentCell->row - 2, currentCell->col);
                     if (cell != NULL)
                     {
                         GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                         if (!testCheck(board, originalCell, cell, PLAYER_WHITE))
                         {
-                            addNode(head, cell);
+                            head = addNode(head, cell);
                         }
                     }
                 }
@@ -397,25 +410,25 @@ node getValidCells(Board* board, GridCell* currentCell)
         case BLACK_PAWN:
             // forward cell
             {
-                GridCell* cell = getCellByIndex(board, currentCell->row - 1, currentCell->col);
+                GridCell* cell = getCellByIndex(board, currentCell->row + 1, currentCell->col);
                 if (cell != NULL)
                 {
                     GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                     if (!testCheck(board, originalCell, cell, PLAYER_BLACK))
                     {
-                        addNode(head, cell);
+                        head = addNode(head, cell);
                     }
                 }
                 // forward 2 cell
                 if (!contains(board->pawnSet, currentCell->piece))
                 {
-                    cell = getCellByIndex(board, currentCell->row - 2, currentCell->col);
+                    cell = getCellByIndex(board, currentCell->row + 2, currentCell->col);
                     if (cell != NULL)
                     {
                         GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                         if (!testCheck(board, originalCell, cell, PLAYER_BLACK))
                         {
-                            addNode(head, cell);
+                            head = addNode(head, cell);
                         }
                     }
                 }
@@ -441,7 +454,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                             GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                             if (!testCheck(board, originalCell, cell, (pieceType == WHITE_CASTLE) ? PLAYER_WHITE : PLAYER_BLACK))
                             {
-                                addNode(head, cell);
+                                head = addNode(head, cell);
                             }
                         }
                         else
@@ -473,7 +486,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                             GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                             if (!testCheck(board, originalCell, cell, (pieceType == WHITE_BISHOP) ? PLAYER_WHITE : PLAYER_BLACK))
                             {
-                                addNode(head, cell);
+                                head = addNode(head, cell);
                             }
                         }
                         else
@@ -504,7 +517,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                         GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                         if (!testCheck(board, originalCell, cell, (pieceType == WHITE_KNIGHT) ? PLAYER_WHITE : PLAYER_BLACK))
                         {
-                            addNode(head, cell);
+                            head = addNode(head, cell);
                         }
                     }
 
@@ -532,7 +545,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                             GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                             if (!testCheck(board, originalCell, cell, (pieceType == WHITE_QUEEN) ? PLAYER_WHITE : PLAYER_BLACK))
                             {
-                                addNode(head, cell);
+                                head = addNode(head, cell);
                             }
                         }
                         else
@@ -563,7 +576,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                         GridCell* originalCell = getCellByIndex(board, currentCell->row, currentCell->col); 
                         if(!testCheck(board, originalCell, cell, (pieceType == WHITE_KING) ? PLAYER_WHITE : PLAYER_BLACK))
                         {
-                            addNode(head, cell);
+                            head = addNode(head, cell);
                         }
                     }
 
@@ -592,7 +605,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
         case WHITE_PAWN:
             row = gc->row;
             col = gc->col;
-            Pair whitePawnAttackPositions[2] = {{1, -1}, {1, 1}};
+            Pair whitePawnAttackPositions[2] = {{-1, -1}, {-1, 1}};
             for(size_t i=0; i<2; i++) 
             {
                 row += whitePawnAttackPositions[i].x;
@@ -601,7 +614,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                 GridCell* cell = getCellByIndex(board, row, col);
                 if(cell != NULL && cell->piece->piece != EMPTY)
                 {
-                    addNode(head, cell);
+                    head = addNode(head, cell);
                 }
 
                 row = gc->row;
@@ -613,7 +626,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
         case BLACK_PAWN:
             row = gc->row;
             col = gc->col;
-            Pair blackPawnAttackPositions[2] = {{-1, -1}, {-1, 1}};
+            Pair blackPawnAttackPositions[2] = {{1, -1}, {1, 1}};
             for(size_t i=0; i<2; i++) 
             {
                 row += blackPawnAttackPositions[i].x;
@@ -622,7 +635,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                 GridCell* cell = getCellByIndex(board, row, col);
                 if(cell != NULL && cell->piece->piece != EMPTY)
                 {
-                    addNode(head, cell);
+                    head = addNode(head, cell);
                 }
 
                 row = gc->row;
@@ -646,7 +659,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                     GridCell* cell = getCellByIndex(board, row, col);
                     if(cell != NULL)
                     {
-                        addNode(head, cell);
+                        head = addNode(head, cell);
                         if(cell->piece->piece != EMPTY) { break; }
                     }
                 }
@@ -672,7 +685,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                     GridCell* cell = getCellByIndex(board, row, col);
                     if(cell != NULL)
                     {
-                        addNode(head, cell);
+                        head = addNode(head, cell);
                         if(cell->piece->piece != EMPTY) { break; }
                     }
                 }
@@ -696,7 +709,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                 GridCell* cell = getCellByIndex(board, row, col);
                 if (cell != NULL)
                 {
-                    addNode(head, cell);
+                    head = addNode(head, cell);
                 }
 
                 row = gc->row;
@@ -721,7 +734,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                     GridCell* cell = getCellByIndex(board, row, col);
                     if(cell != NULL)
                     {
-                        addNode(head, cell);
+                        head = addNode(head, cell);
                         if(cell->piece->piece != EMPTY) { break; }
                     }
                 }
@@ -746,7 +759,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
                 GridCell* cell = getCellByIndex(board, row, col);
                 if (cell != NULL)
                 {
-                    addNode(head, cell);
+                    head = addNode(head, cell);
                 }
 
                 row = gc->row;
@@ -763,6 +776,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
 
 }
 
+// TODO: Should only return capture cells which don't lead to check conditions 
 node getCaptureCells(Board* board, GridCell* gc)
 {
     if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
@@ -782,7 +796,7 @@ node getCaptureCells(Board* board, GridCell* gc)
                     }
                     else
                     {
-                        addNode(head, cur->gc);
+                        head = addNode(head, cur->gc);
                     }
                 }
             }
@@ -797,7 +811,7 @@ node getCaptureCells(Board* board, GridCell* gc)
                     }
                     else
                     {
-                        addNode(head, cur->gc);
+                        head = addNode(head, cur->gc);
                     }
                 }
             }
@@ -811,7 +825,36 @@ node getCaptureCells(Board* board, GridCell* gc)
 
 node getCastlingCells(Board* board, GridCell* gc)
 {
+    if(board == NULL || gc == NULL) { return NULL; }
+    node head = NULL;
+    if(isAllowedToCastle(board, gc))
+    {
+        ChessPiece pieceType = gc->piece->piece;
+        if(isAllowedToCastleQueenSide(board, gc)) 
+        {
+            if(pieceType == WHITE_KING)
+            {
+                head = addNode(head, getCellByIndex(board, 7, 2));
+            }
+            else if (pieceType == BLACK_KING)
+            {
+                head = addNode(head, getCellByIndex(board, 0, 2));
+            }
+        }
 
+        if (isAllowedToCastleKingSide(board, gc))
+        {
+            if(pieceType == WHITE_KING)
+            {
+                head = addNode(head, getCellByIndex(board, 7, 6));
+            }
+            else if (pieceType == BLACK_KING)
+            {
+                head = addNode(head, getCellByIndex(board, 0, 6));
+            }
+        }
+    }
+    return head;
 }
 
 Bool isWhitePiece(Piece* p)
@@ -840,9 +883,8 @@ Bool isAllowedToCastle(Board* board, GridCell* gc)
         if (piece->moves >= 1 || countNumberOfPieceTypeOnBoard(board, (piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE) < 1) { return False; }
 
         // locate the castle cells
-        // GridCellContainer* castleCellsContainer = getAllCellsContainingPiece(board, (piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE);
-        GridCell* castleCells[countNumberOfPieceTypeOnBoard(board, (piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)];
-        size_t castleCellsSize = 0;
+        // GridCell* castleCells[countNumberOfPieceTypeOnBoard(board, (piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)];
+        // size_t castleCellsSize = 0;
 
         // When checking if cells between the castle and the king are empty. We can assume that we need to check the horizontal cells between
         // the kings original position and the castles original position only (since it must be both the kings and the castles first move)
@@ -850,13 +892,13 @@ Bool isAllowedToCastle(Board* board, GridCell* gc)
         // *note Pam Krabbe castling (vertical castling between a king and promoted castle) is not allowed in the FIDE rule set.
         // (https://de-m-wikipedia-org.translate.goog/wiki/Pam-Krabb%C3%A9-Rochade?_x_tr_sl=auto&_x_tr_tl=en&_x_tr_hl=en)
 
-        return (isAllowedToCastleCheckLeft(board, gc) || isAllowedToCastleCheckRight(board, gc));
+        return (isAllowedToCastleQueenSide(board, gc) || isAllowedToCastleKingSide(board, gc));
     }
 
     return False;
 }
 
-Bool isAllowedToCastleCheckLeft(Board* board, GridCell* gc)
+Bool isAllowedToCastleQueenSide(Board* board, GridCell* gc)
 {
     // TODO: Add error handling instead of just returning
     if(board == NULL || gc == NULL) { return False; }
@@ -867,8 +909,9 @@ Bool isAllowedToCastleCheckLeft(Board* board, GridCell* gc)
     Pair castlingCheckDirectionsLeft = {0, -1};
     Bool emptySpaceBetweenKingAndCastle = False;
     Bool kingCanMoveWithoutGoingThroughCheck = True;
+    size_t numCellsToCheckQueenSide = 4;
 
-    // check left spaces between king and castle are empty
+    // check spaces between king and castle are empty
     row = gc->row;
     col = gc->col;
     row += castlingCheckDirectionsLeft.x;
@@ -894,7 +937,7 @@ Bool isAllowedToCastleCheckLeft(Board* board, GridCell* gc)
 
     if(!emptySpaceBetweenKingAndCastle) { return False; }
 
-    // check left for any cells which will move the king through check
+    // check king will not pass through check when castling
     row = gc->row;
     col = gc->col;
 
@@ -903,8 +946,13 @@ Bool isAllowedToCastleCheckLeft(Board* board, GridCell* gc)
     GridCell *testKingCell = getCellByIndex(testBoard, row, col);
     Piece *testKing = deepCopyPiece(testKingCell->piece);
 
-    while ((row >= 0 && row < 8 && col >= 0 && col < 8) && (board->Board[row][col]->piece->piece != ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)))
+    for(size_t i=0; i<numCellsToCheckQueenSide; i++)
     {
+        // Bounds check
+        if (row < 0 || row >= 8 || col < 0 || col >= 8 || (board->Board[row][col]->piece->piece == ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)))
+        {
+            break;
+        }
         updateBoard(testBoard, row, col, testKing);
         if (isInCheck(testBoard, ((piece->piece == WHITE_KING) ? PLAYER_WHITE : PLAYER_BLACK)))
         {
@@ -920,7 +968,7 @@ Bool isAllowedToCastleCheckLeft(Board* board, GridCell* gc)
     return (kingCanMoveWithoutGoingThroughCheck && emptySpaceBetweenKingAndCastle);
 }
 
-Bool isAllowedToCastleCheckRight(Board* board, GridCell* gc)
+Bool isAllowedToCastleKingSide(Board* board, GridCell* gc)
 {
     // TODO: Add error handling instead of just returning
     if(board == NULL || gc == NULL) { return False; }
@@ -931,8 +979,9 @@ Bool isAllowedToCastleCheckRight(Board* board, GridCell* gc)
     Pair castlingCheckDirectionsRight = {0, 1};
     Bool emptySpaceBetweenKingAndCastle = False;
     Bool kingCanMoveWithoutGoingThroughCheck = True;
+    size_t numCellsToCheckKingSide = 3;
 
-    // check right
+    // Check for empty spaces between king and castle
     row = gc->row;
     col = gc->col;
     row += castlingCheckDirectionsRight.x;
@@ -940,6 +989,7 @@ Bool isAllowedToCastleCheckRight(Board* board, GridCell* gc)
 
     while (row >= 0 && row < 8 && col >= 0 && col < 8)
     {
+         
         GridCell *cell = getCellByIndex(board, row, col);
         if (cell->piece->piece == ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE))
         {
@@ -958,15 +1008,20 @@ Bool isAllowedToCastleCheckRight(Board* board, GridCell* gc)
 
     if(!emptySpaceBetweenKingAndCastle) { return False; }
 
-    // check right
+    // Check king will not pass thorough check when castling
     row = gc->row;
     col = gc->col;
     Board* testBoard = deepCopyBoard(board);
     GridCell* testKingCell = getCellByIndex(testBoard, row, col);
     Piece* testKing = deepCopyPiece(testKingCell->piece);
 
-    while ((row >= 0 && row < 8 && col >= 0 && col < 8) && (board->Board[row][col]->piece->piece != ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)))
-    {
+    for(size_t i=0; i<numCellsToCheckKingSide; i++)
+    { 
+        // Bounds check
+        if (row < 0 || row >= 8 || col < 0 || col >= 8 || (board->Board[row][col]->piece->piece == ((piece->piece == WHITE_KING) ? WHITE_CASTLE : BLACK_CASTLE)))
+        {
+            break;
+        }
         updateBoard(testBoard, row, col, testKing);
         if (isInCheck(testBoard, (piece->piece == WHITE_KING) ? PLAYER_WHITE : PLAYER_BLACK))
         {

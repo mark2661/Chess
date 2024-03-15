@@ -13,6 +13,7 @@ typedef struct DragPiece{
     Vector2 originalPosition;
     node validCells;
     node captureCells;
+    node castleCells;
 } DragPiece;
 
 void freeDragPiece(DragPiece*);
@@ -110,6 +111,13 @@ void gameIteration(Board* board, Player player)
             cur = cur->next;
         }
 
+        cur = dragPiece->castleCells;
+        while(cur != NULL)
+        {
+            board->colourBoard[cur->gc->row][cur->gc->col] = 4;
+            cur = cur->next;
+        }
+
         Vector2 mousePos = GetMousePosition();
         Vector2 pos = {mousePos.x - (PIECE_WIDTH / 2), mousePos.y - (PIECE_HEIGHT / 2)};
         DrawTextureRec(board->mainTexture, dragPiece->piece.textureRect, pos, WHITE);
@@ -160,6 +168,9 @@ void freeDragPiece(DragPiece* dragPiece)
     freeList(dragPiece->captureCells);
     dragPiece->captureCells = NULL;
 
+    freeList(dragPiece->castleCells);
+    dragPiece->castleCells = NULL;
+
     free(dragPiece);
 }
 
@@ -175,6 +186,16 @@ DragPiece* getDragPiece(Board* board, GridCell* gc)
 
     dragPiece->validCells = getValidCells(board, gc);
     dragPiece->captureCells = getCaptureCells(board, gc);
+
+    if(gc->piece->piece == WHITE_KING || gc->piece->piece == BLACK_KING)
+    {
+        dragPiece->castleCells = getCastlingCells(board, gc);
+    }
+    else
+    {
+        dragPiece->castleCells = NULL;
+    }
+
 
     return dragPiece;
 }
@@ -227,8 +248,20 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
             GridCell* gc = getCellByMousePosition(board);
             if(gc != NULL && gc->piece != NULL && testBoard != NULL)
             {
+                if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->castleCells))
+                {
+                    // No need to check for check condition for a castling move since the castling check algorithms already handle that
+                    // Accept move
+                    updateBoard(board, gc->row, gc->col, piece);
+                    // TODO: write a function to get the corresponding castle piece and swap it to the correct cell
+                    // Need to "EMPTY" the current castle cell as well.
+                    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                    moveAccepted = True;
+
+
+                }
                 // Move to empty cell
-                if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
+                else if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
                 {
                     // TODO: edit valid and capture cells of piece to only show moves which would resolve the check condtition
                     updateBoard(testBoard, gc->row, gc->col, testPiece);
@@ -275,9 +308,9 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
               }
 
               // ######################################### TEST CODE ##########################################
-              Bool canCastle = isAllowedToCastle(board, getCellContainingPiece(board, WHITE_KING));
-              printf("White king can Castle: %d\n", canCastle);
-              isAllowedToCastle(board, getCellContainingPiece(board, BLACK_KING));
+            //   Bool canCastle = isAllowedToCastle(board, getCellContainingPiece(board, WHITE_KING));
+            //   printf("White king can Castle: %d\n", canCastle);
+            //   isAllowedToCastle(board, getCellContainingPiece(board, BLACK_KING));
               // ######################################### TEST CODE ##########################################
 
               // TODO: create a function which encapsulates all the logic associated with state transition
