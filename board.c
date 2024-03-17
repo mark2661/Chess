@@ -857,6 +857,69 @@ node getCastlingCells(Board* board, GridCell* gc)
     return head;
 }
 
+
+void performCastle(Board* board, GridCell* kingDropCell)
+{
+    Piece* kingPiece = kingDropCell->piece;
+    if(kingPiece == NULL) { return; }
+
+    if (kingDropCell->col == 6)
+    {
+        performKingSideCastle(board, kingDropCell);
+    }
+    else if(kingDropCell->col == 2)
+    {
+        performQueenSideCastle(board, kingDropCell);
+    }
+    
+}
+
+void performKingSideCastle(Board* board, GridCell* kingDropCell)
+{
+    Piece* kingPiece = kingDropCell->piece;
+    if(kingPiece->piece == WHITE_KING)
+    {
+        // Right side castle for white
+        GridCell* castleGridCell = getCellByIndex(board, 7, 7);    
+        Piece* castle = castleGridCell->piece;
+        // "Empty" current castle cell
+        updateBoard(board, castleGridCell->row, castleGridCell->col, NULL);
+        // Add castle to new cell
+        updateBoard(board, 7, 5, castle);
+    }
+
+    else if(kingPiece->piece == BLACK_KING)
+    {
+       // Right side castle for black
+        GridCell* castleGridCell = getCellByIndex(board, 0, 7);    
+        Piece* castle = castleGridCell->piece;
+        updateBoard(board, castleGridCell->row, castleGridCell->col, NULL);
+        updateBoard(board, 0, 5, castle);
+    }
+}
+
+void performQueenSideCastle(Board* board, GridCell* kingDropCell)
+{
+    Piece* kingPiece = kingDropCell->piece;
+    if(kingPiece->piece == WHITE_KING)
+    {
+        // Left side castle for white
+        GridCell* castleGridCell = getCellByIndex(board, 7, 0);    
+        Piece* castle = castleGridCell->piece;
+        updateBoard(board, castleGridCell->row, castleGridCell->col, NULL);
+        updateBoard(board, 7, 3, castle);
+    }
+
+    else if(kingPiece->piece == BLACK_KING)
+    {
+       // Left side castle for black
+        GridCell* castleGridCell = getCellByIndex(board, 0, 0);    
+        Piece* castle = castleGridCell->piece;
+        updateBoard(board, castleGridCell->row, castleGridCell->col, NULL);
+        updateBoard(board, 0, 3, castle);
+    }
+}
+
 Bool isWhitePiece(Piece* p)
 {
     return (p->piece >= WHITE_PAWN && p->piece <= WHITE_KING);

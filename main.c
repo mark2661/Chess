@@ -253,8 +253,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                     // No need to check for check condition for a castling move since the castling check algorithms already handle that
                     // Accept move
                     updateBoard(board, gc->row, gc->col, piece);
-                    // TODO: write a function to get the corresponding castle piece and swap it to the correct cell
-                    // Need to "EMPTY" the current castle cell as well.
+                    performCastle(board, gc);
                     state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                     moveAccepted = True;
 
