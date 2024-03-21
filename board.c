@@ -605,6 +605,7 @@ node getLineOfSightCells(Board* board, GridCell* gc)
         case WHITE_PAWN:
             row = gc->row;
             col = gc->col;
+            // Pair whitePawnAttackPositions[4] = {{-1, -1}, {-1, 1}, {0, -1}, {0, 1}};
             Pair whitePawnAttackPositions[2] = {{-1, -1}, {-1, 1}};
             for(size_t i=0; i<2; i++) 
             {
@@ -789,6 +790,7 @@ node getCaptureCells(Board* board, GridCell* gc)
             {
                 if (isBlackPiece(cur->gc->piece))
                 {
+                    
                     if (head == NULL)
                     {
                         head = createNode();
@@ -798,8 +800,10 @@ node getCaptureCells(Board* board, GridCell* gc)
                     {
                         head = addNode(head, cur->gc);
                     }
+                    
                 }
             }
+
             else if (isBlackPiece(gc->piece))
             {
                 if (isWhitePiece(cur->gc->piece))
@@ -819,8 +823,88 @@ node getCaptureCells(Board* board, GridCell* gc)
             cur = cur->next;
         }
 
+        if ((gc->piece->piece == WHITE_PAWN) || (gc->piece->piece == BLACK_PAWN))
+        {
+            node enPassantHead = getEnPassantCells(board, gc);
+            if (enPassantHead != NULL) { head = concatenate_LL(head, enPassantHead); }
+        }
+
         return head;
     }
+}
+
+node getEnPassantCells(Board* board, GridCell* gc)
+{
+    // TODO: Add error handling here
+    if(board == NULL || gc == NULL) { return NULL; }
+
+    node head = NULL;
+    if(gc->piece != NULL)
+    {
+        
+        if(isWhitePiece(gc->piece))
+        {
+            // check left
+            {
+                GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1))
+                {
+                    // Add En Passant Cell
+                    GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col - 1));
+                    if (enPassantCell != NULL)
+                    {
+                        head = addNode(head, enPassantCell);
+                    }
+                }
+            }
+
+            // check right
+            {
+                GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1))
+                {
+                    // Add En Passant Cell
+                    GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col + 1));
+                    if (enPassantCell != NULL)
+                    {
+                        head = addNode(head, enPassantCell);
+                    }
+                }
+            }
+        }
+        else if (isBlackPiece(gc->piece))
+        {
+            // check left
+            {
+                GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1))
+                {
+                    // Add En Passant Cell
+                    GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col - 1));
+                    if (enPassantCell != NULL)
+                    {
+                        head = addNode(head, enPassantCell);
+                    }
+                }
+            }
+
+            // check right
+            {
+                GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1))
+                {
+                    // Add En Passant Cell
+                    GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col + 1));
+                    if (enPassantCell != NULL)
+                    {
+                        head = addNode(head, enPassantCell);
+                    }
+                }
+            }
+        }
+    }
+
+    return head;
 }
 
 node getCastlingCells(Board* board, GridCell* gc)
@@ -1128,6 +1212,24 @@ node addNode(node head, GridCell* value)
     }
 
     return head;
+}
+
+node concatenate_LL(node head1, node head2)
+{
+    if(head1 == NULL) { return head2; }
+    if(head2 == NULL) { return head1; }
+
+    // find tail of list 1
+    node cur = head1;
+    while(cur->next != NULL)
+    {
+        cur = cur->next;
+    }
+
+    // contatenate lists
+    cur->next = head2;
+
+    return head1;
 }
 
 void freeList(node head)
@@ -1505,6 +1607,16 @@ void printBoard(Board* board, char* title)
             printf("]\n");
         }
         printf("********************************************************\n");
+    }
+}
+
+void printLL(node head)
+{
+    node cur = head;
+    while(cur != NULL)
+    {
+        printf("Row: %d, Col: %d\n", cur->gc->row, cur->gc->col);
+        cur = cur->next;
     }
 }
 // ###################################################### END DEBUG FUNCTIONS ################################################################

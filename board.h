@@ -49,6 +49,7 @@ void performCastle(Board*, GridCell*);
 void performKingSideCastle(Board*, GridCell*);
 void performQueenSideCastle(Board*, GridCell*);
 node getCaptureCells(Board*, GridCell*);
+node getEnPassantCells(Board*, GridCell*);
 Bool isWhitePiece(Piece*);
 Bool isBlackPiece(Piece*);
 Bool isAllowedToCastle(Board*, GridCell*);
@@ -63,6 +64,7 @@ void freeBoard(Board*);
 // Linked List
 node createNode();
 node addNode(node, GridCell*);
+node concatenate_LL(node, node);
 void freeList(node);
 Bool contains_LL(node, GridCell*);
 node remove_LL(node, GridCell*);
@@ -79,4 +81,5 @@ bool contains(HashSet*, Piece*);
 
 // Debug functions
 void printBoard(Board*, char*);
+void printLL(node);
 

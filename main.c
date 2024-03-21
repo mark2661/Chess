@@ -103,7 +103,6 @@ void gameIteration(Board* board, Player player)
             board->colourBoard[cur->gc->row][cur->gc->col] = 2; // Temp code to visually identify valid drop cells for a piece
             cur = cur->next;
         }
-
         cur = dragPiece->captureCells;
         while (cur != NULL)
         {
@@ -248,84 +247,120 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
             GridCell* gc = getCellByMousePosition(board);
             if(gc != NULL && gc->piece != NULL && testBoard != NULL)
             {
-                if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->castleCells))
-                {
-                    // No need to check for check condition for a castling move since the castling check algorithms already handle that
-                    // Accept move
-                    updateBoard(board, gc->row, gc->col, piece);
-                    performCastle(board, gc);
-                    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
-                    moveAccepted = True;
+               // Check for Castling move
+               if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->castleCells))
+               {
+                   // No need to check for check condition for a castling move since the castling check algorithms already handle that
+                   // Accept move
+                   updateBoard(board, gc->row, gc->col, piece);
+                   performCastle(board, gc);
+                   state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                   moveAccepted = True;
+               }
+               // Move to empty cell
+               else if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
+               {
+                   // TODO: edit valid and capture cells of piece to only show moves which would resolve the check condtition
+                   updateBoard(testBoard, gc->row, gc->col, testPiece);
+                   if (!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
+                   {
+                       // Accept move
+                       updateBoard(board, gc->row, gc->col, piece);
+                       state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                       moveAccepted = True;
+                   }
+               }
+               // Capture piece and move to cell
+               else if (gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
+               {
+                   updateBoard(testBoard, gc->row, gc->col, testPiece);
+                   if (!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
+                   {
+                       // remove captured piece
+                       freePiece(gc);
+                       updateBoard(board, gc->row, gc->col, piece);
+                       state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                       moveAccepted = True;
+                   }
+               }
 
+               // Check for En Passant capture
+               // TODO: might need to check for "king in check"
+               // TODO: En Passant should only be valid for one turn
+               else if ((piece->piece == WHITE_PAWN) || (piece->piece == BLACK_PAWN))
+               {
+                   if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->captureCells))
+                   {
+                       if (isWhitePiece(piece))
+                       {
+                           if (gc->row < dragPiece->originalPosition.x)
+                           {
+                               GridCell *enemyPawnCell = getCellByIndex(board, (gc->row + 1), gc->col);
 
-                }
-                // Move to empty cell
-                else if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
-                {
-                    // TODO: edit valid and capture cells of piece to only show moves which would resolve the check condtition
-                    updateBoard(testBoard, gc->row, gc->col, testPiece);
-                    if(!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
-                    {
-                        // Accept move
-                        updateBoard(board, gc->row, gc->col, piece);
-                        state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
-                        moveAccepted = True;
-                    }
-                    
-                }
-                // Capture piece and move to cell
-                else if (gc->piece->piece != EMPTY && isValidGridCell(gc, dragPiece->captureCells))
-                {
-                    updateBoard(testBoard, gc->row, gc->col, testPiece);
-                    if(!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
-                    {
-                        // remove captured piece
-                        freePiece(gc);
-                        updateBoard(board, gc->row, gc->col, piece);
-                        state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
-                        moveAccepted = True;
-                    }
-                }
+                               // remove captured piece
+                               freePiece(enemyPawnCell);
+                               // set cell containing captured pawn to "EMPTY"
+                               updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
+                               // move player pawn to the En Passant capture cell
+                               updateBoard(board, gc->row, gc->col, piece);
+                               state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                               moveAccepted = True;
+                           }
+                       }
 
+                       else if (isBlackPiece(piece))
+                       {
+                           if (gc->row > dragPiece->originalPosition.x)
+                           {
+                               GridCell *enemyPawnCell = getCellByIndex(board, (gc->row - 1), gc->col);
 
-              // TODO: fix bug, piece moves count not updating, think it's because pieces are being deep copied multiple times
-              if (moveAccepted) 
-              {  
-                incrementPieceMoveCount(gc->piece);
-              }
+                               // remove captured piece
+                               freePiece(enemyPawnCell);
+                               // set cell containing captured pawn to "EMPTY"
+                               updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
+                               // move player pawn to the En Passant capture cell
+                               updateBoard(board, gc->row, gc->col, piece);
+                               state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                               moveAccepted = True;
+                           }
+                       }
+                   }
+               }
+
+               // TODO: fix bug, piece moves count not updating, think it's because pieces are being deep copied multiple times
+               if (moveAccepted)
+               {
+                   incrementPieceMoveCount(gc->piece);
+               }
                // Invalid move return to origin cell
-              else
-              {
+               else
+               {
 
-                  // TODO: Fix bug where a pawn's initial move is invalid but it is still added to the pawnSet meaning it
-                  // no longer has the option of moving two squares in front
-                  GridCell *originalGridCell = getCellByIndex(board, dragPiece->originalPosition.x, dragPiece->originalPosition.y);
-                  if (originalGridCell != NULL)
-                  {
-                      updateBoard(board, originalGridCell->row, originalGridCell->col, piece);
-                  }
-              }
+                   // TODO: Fix bug where a pawn's initial move is invalid but it is still added to the pawnSet meaning it
+                   // no longer has the option of moving two squares in front
+                   GridCell *originalGridCell = getCellByIndex(board, dragPiece->originalPosition.x, dragPiece->originalPosition.y);
+                   if (originalGridCell != NULL)
+                   {
+                       updateBoard(board, originalGridCell->row, originalGridCell->col, piece);
+                   }
+               }
 
-              // ######################################### TEST CODE ##########################################
-            //   Bool canCastle = isAllowedToCastle(board, getCellContainingPiece(board, WHITE_KING));
-            //   printf("White king can Castle: %d\n", canCastle);
-            //   isAllowedToCastle(board, getCellContainingPiece(board, BLACK_KING));
-              // ######################################### TEST CODE ##########################################
+               // TODO: En Passant should only be available for one turn
 
-              // TODO: create a function which encapsulates all the logic associated with state transition
-              // maybe don't need to do this anymore?
-              if (gc->piece->piece == WHITE_PAWN && gc->row == 7)
-              {
-                  menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
-                  pawnPromotionCell = gc;
-                  state = WHITE_PIECE_SELECT_MENU;
-              }
-              else if (gc->piece->piece == BLACK_PAWN && gc->row == 0)
-              {
-                  menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
-                  pawnPromotionCell = gc;
-                  state = BLACK_PIECE_SELECT_MENU;
-              }
+               // TODO: create a function which encapsulates all the logic associated with state transition
+               // maybe don't need to do this anymore?
+               if (gc->piece->piece == WHITE_PAWN && gc->row == 7)
+               {
+                   menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
+                   pawnPromotionCell = gc;
+                   state = WHITE_PIECE_SELECT_MENU;
+               }
+               else if (gc->piece->piece == BLACK_PAWN && gc->row == 0)
+               {
+                   menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
+                   pawnPromotionCell = gc;
+                   state = BLACK_PIECE_SELECT_MENU;
+               }
             }
 
             if (testBoard != NULL)
