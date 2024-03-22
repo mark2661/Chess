@@ -823,11 +823,11 @@ node getCaptureCells(Board* board, GridCell* gc)
             cur = cur->next;
         }
 
-        if ((gc->piece->piece == WHITE_PAWN) || (gc->piece->piece == BLACK_PAWN))
-        {
-            node enPassantHead = getEnPassantCells(board, gc);
-            if (enPassantHead != NULL) { head = concatenate_LL(head, enPassantHead); }
-        }
+        // if ((gc->piece->piece == WHITE_PAWN) || (gc->piece->piece == BLACK_PAWN))
+        // {
+        //     node enPassantHead = getEnPassantCells(board, gc);
+        //     if (enPassantHead != NULL) { head = concatenate_LL(head, enPassantHead); }
+        // }
 
         return head;
     }
@@ -839,6 +839,9 @@ node getEnPassantCells(Board* board, GridCell* gc)
     if(board == NULL || gc == NULL) { return NULL; }
 
     node head = NULL;
+    static HashSet* enPassantExpired = NULL;
+    if(enPassantExpired == NULL) { enPassantExpired = createHashSet(); }
+
     if(gc->piece != NULL)
     {
         
@@ -847,13 +850,14 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check left
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1))
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece))
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col - 1));
                     if (enPassantCell != NULL)
                     {
                         head = addNode(head, enPassantCell);
+                        insert(enPassantExpired, neighbour->piece);
                     }
                 }
             }
@@ -861,13 +865,14 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check right
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1))
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece))
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col + 1));
                     if (enPassantCell != NULL)
                     {
                         head = addNode(head, enPassantCell);
+                        insert(enPassantExpired, neighbour->piece);
                     }
                 }
             }
@@ -877,13 +882,14 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check left
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1))
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece))
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col - 1));
                     if (enPassantCell != NULL)
                     {
                         head = addNode(head, enPassantCell);
+                        insert(enPassantExpired, neighbour->piece);
                     }
                 }
             }
@@ -898,6 +904,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                     if (enPassantCell != NULL)
                     {
                         head = addNode(head, enPassantCell);
+                        insert(enPassantExpired, neighbour->piece);
                     }
                 }
             }

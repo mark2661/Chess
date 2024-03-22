@@ -14,6 +14,7 @@ typedef struct DragPiece{
     node validCells;
     node captureCells;
     node castleCells;
+    node enPassantCells;
 } DragPiece;
 
 void freeDragPiece(DragPiece*);
@@ -110,6 +111,14 @@ void gameIteration(Board* board, Player player)
             cur = cur->next;
         }
 
+        cur = dragPiece->enPassantCells;
+        while (cur != NULL)
+        {
+            // En Passant cells have the same colour as capture cells since they are a type of capture cell
+            board->colourBoard[cur->gc->row][cur->gc->col] = 3; // Temp code to visually identify valid drop cells for a piece
+            cur = cur->next;
+        }
+
         cur = dragPiece->castleCells;
         while(cur != NULL)
         {
@@ -170,6 +179,9 @@ void freeDragPiece(DragPiece* dragPiece)
     freeList(dragPiece->castleCells);
     dragPiece->castleCells = NULL;
 
+    freeList(dragPiece->enPassantCells);
+    dragPiece->enPassantCells = NULL;
+
     free(dragPiece);
 }
 
@@ -193,6 +205,15 @@ DragPiece* getDragPiece(Board* board, GridCell* gc)
     else
     {
         dragPiece->castleCells = NULL;
+    }
+
+    if(gc->piece->piece == WHITE_PAWN || gc->piece->piece == BLACK_PAWN)
+    {
+        dragPiece->enPassantCells = getEnPassantCells(board, gc);
+    }
+    else
+    {
+        dragPiece->enPassantCells = NULL;
     }
 
 
@@ -289,7 +310,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                // TODO: En Passant should only be valid for one turn
                else if ((piece->piece == WHITE_PAWN) || (piece->piece == BLACK_PAWN))
                {
-                   if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->captureCells))
+                   if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->enPassantCells))
                    {
                        if (isWhitePiece(piece))
                        {
@@ -345,17 +366,16 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    }
                }
 
-               // TODO: En Passant should only be available for one turn
 
                // TODO: create a function which encapsulates all the logic associated with state transition
                // maybe don't need to do this anymore?
-               if (gc->piece->piece == WHITE_PAWN && gc->row == 7)
+               if (gc->piece->piece == WHITE_PAWN && gc->row == 0)
                {
                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
                    pawnPromotionCell = gc;
                    state = WHITE_PIECE_SELECT_MENU;
                }
-               else if (gc->piece->piece == BLACK_PAWN && gc->row == 0)
+               else if (gc->piece->piece == BLACK_PAWN && gc->row == 7)
                {
                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
                    pawnPromotionCell = gc;
