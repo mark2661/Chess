@@ -850,7 +850,8 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check left
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece))
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece)
+                    && (neighbour->row == 3)) // <-- Row must be == 3 for a BLACK PAWN since En Passant is only valid if the enemy pawn moves 2 squares.
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col - 1));
@@ -865,7 +866,8 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check right
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece))
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece)
+                    && (neighbour->row == 3))
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col + 1));
@@ -882,7 +884,8 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check left
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece))
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece)
+                    && (neighbour->row == 4)) // <-- Row must be == 4 for a WHITE PAWN since En Passant is only valid if the enemy pawn moves 2 squares.
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col - 1));
@@ -897,7 +900,8 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check right
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1))
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece)
+                    && (neighbour->row == 4))
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col + 1));
