@@ -2,6 +2,9 @@
 #include <stdint.h>
 #include "raylib.h"
 
+#define EN_PASSANT_IDTENTIFIER_THRESHOLD 100
+#define EN_PASSANT_DISABLED_THRESHOLD 1000
+
 typedef enum Bool{
     False,
     True

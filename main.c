@@ -24,8 +24,11 @@ DragPiece* startDragOperation(Board*, Player);
 void endDragOperation(Board*, DragPiece*);
 void gameIteration(Board*, Player);
 void pieceSelectMenuIteration(Board*, Player);
+void reEnableEnPassantCapture();
+void disableEnPassantCapture();
 
 Bool dragging = False;
+node enPassantPawnsLL;
 GameState state = WHITE_IN_PLAY;
 
 Menu* menu = NULL;
@@ -35,7 +38,6 @@ char *options[PIECE_SELECT_MENU_OPTIONS_LENGTH] = PIECE_SELECT_MENU_OPTIONS;
 size_t options_length = PIECE_SELECT_MENU_OPTIONS_LENGTH;
 
 // DEBUG
-int count = 0;
 // GameState state = WHITE_PIECE_SELECT_MENU;
 // DEBUG
 
@@ -47,6 +49,7 @@ int main(void)
     SetTargetFPS(60);
 
     Board board = initBoard();
+    enPassantPawnsLL = NULL;
 
     while (!WindowShouldClose()) // Detect window close button or ESC key
     {
@@ -179,8 +182,11 @@ void freeDragPiece(DragPiece* dragPiece)
     freeList(dragPiece->castleCells);
     dragPiece->castleCells = NULL;
 
-    freeList(dragPiece->enPassantCells);
-    dragPiece->enPassantCells = NULL;
+    // Can't free the enPassantCells linked list since the global variable enPassantPawnsLL may have a pointer to the memory 
+    // which is used by the reEnableEnPassantCapture and disableEnPassantCaptue.
+
+    // freeList(dragPiece->enPassantCells);
+    // dragPiece->enPassantCells = NULL;
 
     free(dragPiece);
 }
@@ -210,12 +216,15 @@ DragPiece* getDragPiece(Board* board, GridCell* gc)
     if(gc->piece->piece == WHITE_PAWN || gc->piece->piece == BLACK_PAWN)
     {
         dragPiece->enPassantCells = getEnPassantCells(board, gc);
+        if(dragPiece->enPassantCells != NULL)
+        {
+            enPassantPawnsLL = getEnPassantNeighours(board, gc);
+        }
     }
     else
     {
         dragPiece->enPassantCells = NULL;
     }
-
 
     return dragPiece;
 }
@@ -352,6 +361,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                if (moveAccepted)
                {
                    incrementPieceMoveCount(gc->piece);
+                   disableEnPassantCapture();
                }
                // Invalid move return to origin cell
                else
@@ -364,6 +374,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    {
                        updateBoard(board, originalGridCell->row, originalGridCell->col, piece);
                    }
+                   reEnableEnPassantCapture();
                }
 
 
@@ -392,4 +403,30 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                 freeDragPiece(dragPiece);
             }
             resetColourBoard(board);
+}
+
+
+void reEnableEnPassantCapture()
+{
+    node cur = enPassantPawnsLL;
+    while (cur != NULL)
+    {
+        if(cur->gc->piece->moves < EN_PASSANT_DISABLED_THRESHOLD) 
+        {
+            cur->gc->piece->moves = 1;
+        }
+        cur = cur->next;
+    }
+    // enPassantPawnsLL = NULL;
+}
+
+void disableEnPassantCapture()
+{
+    node cur = enPassantPawnsLL;
+    while (cur != NULL)
+    {
+        incrementPieceMoveCountByValue(cur->gc->piece, EN_PASSANT_DISABLED_THRESHOLD);
+        cur = cur->next;
+    }
+    // enPassantPawnsLL = NULL;
 }

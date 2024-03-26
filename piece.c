@@ -28,3 +28,18 @@ void incrementPieceMoveCount(Piece* piece)
 {
    if(piece != NULL) { piece->moves += 1; } 
 }
+
+void incrementPieceMoveCountByValue(Piece* piece, uint32_t value)
+{
+    if(piece != NULL) { piece->moves += value; }
+}
+
+void decrementPieceMoveCount(Piece* piece)
+{
+    if(piece != NULL) { piece->moves -= 1; }
+}
+
+void decrementPieceMoveCountByValue(Piece* piece, uint32_t value)
+{
+    if(piece != NULL) { piece->moves -= value; }
+}

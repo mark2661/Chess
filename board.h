@@ -31,6 +31,10 @@ typedef struct Board{
     HashSet *pawnSet;
 } Board;
 
+// typedef struct EnPassantContainer
+// {
+// } EnPassantPair;
+
 
 Board initBoard(void);
 void drawBoard(Board);
@@ -50,6 +54,7 @@ void performKingSideCastle(Board*, GridCell*);
 void performQueenSideCastle(Board*, GridCell*);
 node getCaptureCells(Board*, GridCell*);
 node getEnPassantCells(Board*, GridCell*);
+node getEnPassantNeighours(Board*, GridCell*);
 Bool isWhitePiece(Piece*);
 Bool isBlackPiece(Piece*);
 Bool isAllowedToCastle(Board*, GridCell*);
@@ -73,6 +78,7 @@ Bool isValidGridCell(GridCell*, node);
 // Hash Set
 HashNode* createHashNode(Piece*);
 HashSet* createHashSet();
+HashSet* copyHashSet(HashSet*);
 void freeHashSet(HashSet*);
 int hash(int);
 void insert(HashSet*, Piece*);
@@ -82,4 +88,5 @@ bool contains(HashSet*, Piece*);
 // Debug functions
 void printBoard(Board*, char*);
 void printLL(node);
+void printHashSet(HashSet*);
 

@@ -3,7 +3,6 @@
 #include <string.h>
 #include "board.h"
 
-
 Board initBoard(void)
 {
     Bool b = False;
@@ -39,45 +38,37 @@ Board initBoard(void)
         Piece* whitePawn = getPiece(WHITE_PAWN);
         Piece* blackPiece = getPiece(blackBackRow[col]);
         Piece* blackPawn = getPiece(BLACK_PAWN);
-        // if(whitePiece)
         if(blackPiece)
         {
             GridCell* gc = (GridCell*)malloc(sizeof(GridCell));
             gc->row = 0;
             gc->col = col;
-            // gc->piece = whitePiece;
             gc->piece = blackPiece;
             board.Board[0][col] = gc;
         }
-        // if(whitePawn)
         if(blackPawn)
         {
             GridCell *gc = (GridCell *)malloc(sizeof(GridCell));
             gc->row = 1;
             gc->col = col;
-            // gc->piece = whitePawn;
             gc->piece = blackPawn;
             board.Board[1][col] = gc;
         }
 
-        // if(blackPiece)
         if(whitePiece)
         {
             GridCell *gc = (GridCell *)malloc(sizeof(GridCell));
             gc->row = 7;
             gc->col = col;
-            // gc->piece = blackPiece;
             gc->piece = whitePiece;
             board.Board[7][col] = gc;
         }
 
-        // if(blackPawn)
         if(whitePawn)
         {
             GridCell *gc = (GridCell *)malloc(sizeof(GridCell));
             gc->row = 6;
             gc->col = col;
-            // gc->piece = blackPawn;
             gc->piece = whitePawn;
             board.Board[6][col] = gc;
          }
@@ -823,12 +814,6 @@ node getCaptureCells(Board* board, GridCell* gc)
             cur = cur->next;
         }
 
-        // if ((gc->piece->piece == WHITE_PAWN) || (gc->piece->piece == BLACK_PAWN))
-        // {
-        //     node enPassantHead = getEnPassantCells(board, gc);
-        //     if (enPassantHead != NULL) { head = concatenate_LL(head, enPassantHead); }
-        // }
-
         return head;
     }
 }
@@ -839,8 +824,6 @@ node getEnPassantCells(Board* board, GridCell* gc)
     if(board == NULL || gc == NULL) { return NULL; }
 
     node head = NULL;
-    static HashSet* enPassantExpired = NULL;
-    if(enPassantExpired == NULL) { enPassantExpired = createHashSet(); }
 
     if(gc->piece != NULL)
     {
@@ -850,15 +833,15 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check left
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece)
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1)
                     && (neighbour->row == 3)) // <-- Row must be == 3 for a BLACK PAWN since En Passant is only valid if the enemy pawn moves 2 squares.
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col - 1));
                     if (enPassantCell != NULL)
                     {
+                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
-                        insert(enPassantExpired, neighbour->piece);
                     }
                 }
             }
@@ -866,15 +849,15 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check right
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece)
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves == 1)
                     && (neighbour->row == 3))
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col + 1));
                     if (enPassantCell != NULL)
                     {
+                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
-                        insert(enPassantExpired, neighbour->piece);
                     }
                 }
             }
@@ -884,15 +867,15 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check left
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece)
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1)
                     && (neighbour->row == 4)) // <-- Row must be == 4 for a WHITE PAWN since En Passant is only valid if the enemy pawn moves 2 squares.
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col - 1));
                     if (enPassantCell != NULL)
                     {
+                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
-                        insert(enPassantExpired, neighbour->piece);
                     }
                 }
             }
@@ -900,15 +883,15 @@ node getEnPassantCells(Board* board, GridCell* gc)
             // check right
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1) && !contains(enPassantExpired, neighbour->piece)
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves == 1)
                     && (neighbour->row == 4))
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col + 1));
                     if (enPassantCell != NULL)
                     {
+                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
-                        insert(enPassantExpired, neighbour->piece);
                     }
                 }
             }
@@ -916,6 +899,65 @@ node getEnPassantCells(Board* board, GridCell* gc)
     }
 
     return head;
+}
+
+node getEnPassantNeighours(Board* board, GridCell* gc)
+{
+    if(board == NULL || gc == NULL) { return NULL; }
+
+    node head = NULL;
+
+    if(gc->piece != NULL)
+    {
+        
+        if(isWhitePiece(gc->piece))
+        {
+            // check left
+            {
+                GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDTENTIFIER_THRESHOLD)
+                    && (neighbour->row == 3)) // <-- Row must be == 3 for a BLACK PAWN since En Passant is only valid if the enemy pawn moves 2 squares.
+                {
+                    head = addNode(head, neighbour);
+                }
+            }
+
+            // check right
+            {
+                GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDTENTIFIER_THRESHOLD)
+                    && (neighbour->row == 3))
+                {
+                    head = addNode(head, neighbour);
+                }
+            }
+        }
+        else if (isBlackPiece(gc->piece))
+        {
+            // check left
+            {
+                GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDTENTIFIER_THRESHOLD)
+                    && (neighbour->row == 4)) // <-- Row must be == 4 for a WHITE PAWN since En Passant is only valid if the enemy pawn moves 2 squares.
+                {
+                    head = addNode(head, neighbour);
+                }
+            }
+
+            // check right
+            {
+                GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDTENTIFIER_THRESHOLD)
+                    && (neighbour->row == 4))
+                {
+                    head = addNode(head, neighbour);
+                }
+            }
+        }
+    }
+
+    return head;
+
 }
 
 node getCastlingCells(Board* board, GridCell* gc)
@@ -1522,7 +1564,8 @@ HashNode* createHashNode(Piece* piece)
     return newNode;
 }
 
-HashSet* createHashSet(){
+HashSet* createHashSet()
+{
     HashSet* set = (HashSet*)malloc(sizeof(HashSet));
     if(set == NULL)
     {
@@ -1538,6 +1581,32 @@ HashSet* createHashSet(){
     return set;
 }
 
+HashSet* copyHashSet(HashSet* originalHashSet)
+{
+    if(originalHashSet == NULL) { return NULL; }
+    HashSet* newHashSet = createHashSet();
+    for(size_t i=0; i<SIZE; i++)
+    {
+        HashNode* cur = originalHashSet->buckets[i];
+        HashNode* newHashNodeCur;
+        if(cur != NULL && cur->piece != NULL)
+        {
+            newHashNodeCur = createHashNode(cur->piece);
+            newHashSet->buckets[i] = newHashNodeCur;
+            cur = cur->next;
+        }
+
+        while (cur != NULL)
+        {
+            newHashNodeCur->next = createHashNode(cur->piece);
+            cur = cur->next;
+            newHashNodeCur = newHashNodeCur->next;
+        }
+    }
+
+    return newHashSet;
+}
+
 void freeHashSet(HashSet* set)
 {
     if (set == NULL) { return; }
@@ -1547,12 +1616,13 @@ void freeHashSet(HashSet* set)
         HashNode *next = NULL;
         while (cur != NULL)
         {
-            // Free piece struct contained in bucket
-            if (cur->piece != NULL)
-            {
-                free(cur->piece);
-                cur->piece = NULL;
-            }
+            // I don't think the Piece* should be freed here since it is still in use. May change later 
+            // // Free piece struct contained in bucket
+            // if (cur->piece != NULL)
+            // {
+            //     free(cur->piece);
+            //     cur->piece = NULL;
+            // }
 
             // Free node pointer
             next = cur->next;
@@ -1628,6 +1698,21 @@ void printLL(node head)
     {
         printf("Row: %d, Col: %d\n", cur->gc->row, cur->gc->col);
         cur = cur->next;
+    }
+}
+
+void printHashSet(HashSet* set)
+{
+    for(size_t i=0; i<SIZE; i++)
+    {
+        HashNode* cur = set->buckets[i];
+        printf("Bucket %ld: [", i);
+        while(cur != NULL)
+        {
+            if(cur->piece != NULL) { printf("%d,", cur->piece->id); }
+            cur = cur->next;
+        }
+        printf("]\n\n");
     }
 }
 // ###################################################### END DEBUG FUNCTIONS ################################################################
