@@ -327,19 +327,14 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                                GridCell *enemyPawnCell = getCellByIndex(board, (gc->row + 1), gc->col);
                                if(endDragOperation != NULL)
                                {
-                                   updateBoard(testBoard, enemyPawnCell->row, enemyPawnCell->col, NULL);
-                                   updateBoard(testBoard, gc->row, gc->col, testPiece);
-                                   if (!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
-                                   {
-                                       // remove captured piece
-                                       freePiece(enemyPawnCell);
-                                       // set cell containing captured pawn to "EMPTY"
-                                       updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
-                                       // move player pawn to the En Passant capture cell
-                                       updateBoard(board, gc->row, gc->col, piece);
-                                       state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
-                                       moveAccepted = True;
-                                   }
+                                   // remove captured piece
+                                   freePiece(enemyPawnCell);
+                                   // set cell containing captured pawn to "EMPTY"
+                                   updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
+                                   // move player pawn to the En Passant capture cell
+                                   updateBoard(board, gc->row, gc->col, piece);
+                                   state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                                   moveAccepted = True;
                                }
                          }
                        }
@@ -351,19 +346,14 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                                GridCell *enemyPawnCell = getCellByIndex(board, (gc->row - 1), gc->col);
                                if (enemyPawnCell != NULL)
                                {
-                                   updateBoard(testBoard, enemyPawnCell->row, enemyPawnCell->col, NULL);
-                                   updateBoard(testBoard, gc->row, gc->col, testPiece);
-                                   if (!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
-                                   {
-                                       // remove captured piece
-                                       freePiece(enemyPawnCell);
-                                       // set cell containing captured pawn to "EMPTY"
-                                       updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
-                                       // move player pawn to the En Passant capture cell
-                                       updateBoard(board, gc->row, gc->col, piece);
-                                       state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
-                                       moveAccepted = True;
-                                   }
+                                   // remove captured piece
+                                   freePiece(enemyPawnCell);
+                                   // set cell containing captured pawn to "EMPTY"
+                                   updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
+                                   // move player pawn to the En Passant capture cell
+                                   updateBoard(board, gc->row, gc->col, piece);
+                                   state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                                   moveAccepted = True;
                                }
                            }
                        }
@@ -450,13 +440,45 @@ Bool isInCheckMate(Board* board)
     // and if no valid cells found it means the king is in check mate
     if(state == WHITE_IN_PLAY)
     {
-
-    }
+        if(isInCheck(board, PLAYER_WHITE))
+        {
+            for (size_t row = 0; row < 8; row++)
+            {
+                for (size_t col = 0; col < 8; col++)
+                {
+                    GridCell *gc = getCellByIndex(board, row, col);
+                    if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
+                    {
+                        node validCells = getValidCells(board, gc);
+                        node captureCells = getCaptureCells(board, gc);
+                        node enPassantCells = getEnPassantCells(board, gc);
+                        if (validCells != NULL || captureCells != NULL || enPassantCells != NULL) { return False; }
+                    }
+                }
+            }
+        }
+   }
 
     else if (state == BLACK_IN_PLAY)
     {
+        if(isInCheck(board, PLAYER_WHITE))
+        {
+            for (size_t row = 0; row < 8; row++)
+            {
+                for (size_t col = 0; col < 8; col++)
+                {
+                    GridCell *gc = getCellByIndex(board, row, col);
+                    if (gc != NULL && gc->piece != NULL && isBlackPiece(gc->piece))
+                    {
+                        node validCells = getValidCells(board, gc);
+                        node captureCells = getCaptureCells(board, gc);
+                        node enPassantCells = getEnPassantCells(board, gc);
+                        if (validCells != NULL || captureCells != NULL || enPassantCells != NULL) { return False; }
+                    }
+                }
+            }
+        }
+   }
 
-    }
-
-    return False;
+    return True; 
 }

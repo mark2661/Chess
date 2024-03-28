@@ -841,7 +841,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col - 1));
-                    if (enPassantCell != NULL)
+                    if (enPassantCell != NULL && !testCheck(board, gc, enPassantCell, PLAYER_WHITE))
                     {
                         incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
@@ -857,7 +857,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col + 1));
-                    if (enPassantCell != NULL)
+                    if (enPassantCell != NULL && !testCheck(board, gc, enPassantCell, PLAYER_WHITE))
                     {
                         incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
@@ -875,7 +875,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col - 1));
-                    if (enPassantCell != NULL)
+                    if (enPassantCell != NULL && !testCheck(board, gc, enPassantCell, PLAYER_BLACK))
                     {
                         incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
@@ -891,7 +891,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                 {
                     // Add En Passant Cell
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col + 1));
-                    if (enPassantCell != NULL)
+                    if (enPassantCell != NULL && !testCheck(board, gc, enPassantCell, PLAYER_BLACK))
                     {
                         incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
