@@ -766,7 +766,6 @@ node getLineOfSightCells(Board* board, GridCell* gc)
 
 }
 
-// TODO: Should only return capture cells which don't lead to check conditions 
 node getCaptureCells(Board* board, GridCell* gc)
 {
     if(gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
@@ -780,16 +779,19 @@ node getCaptureCells(Board* board, GridCell* gc)
                 if (isBlackPiece(cur->gc->piece))
                 {
                     
-                    if (head == NULL)
+                    if(!testCheck(board, gc, cur->gc, PLAYER_WHITE))
                     {
-                        head = createNode();
-                        head->gc = cur->gc;
+                        if (head == NULL)
+                        {
+                            head = createNode();
+                            head->gc = cur->gc;
+                        }
+                        else
+                        {
+                            head = addNode(head, cur->gc);
+                        }
                     }
-                    else
-                    {
-                        head = addNode(head, cur->gc);
-                    }
-                    
+                   
                 }
             }
 
@@ -797,16 +799,19 @@ node getCaptureCells(Board* board, GridCell* gc)
             {
                 if (isWhitePiece(cur->gc->piece))
                 {
-                    if (head == NULL)
+                    if(!testCheck(board, gc, cur->gc, PLAYER_BLACK))
                     {
-                        head = createNode();
-                        head->gc = cur->gc;
+                        if (head == NULL)
+                        {
+                            head = createNode();
+                            head->gc = cur->gc;
+                        }
+                        else
+                        {
+                            head = addNode(head, cur->gc);
+                        }
                     }
-                    else
-                    {
-                        head = addNode(head, cur->gc);
-                    }
-                }
+               }
             }
 
             cur = cur->next;

@@ -26,6 +26,7 @@ void gameIteration(Board*, Player);
 void pieceSelectMenuIteration(Board*, Player);
 void reEnableEnPassantCapture();
 void disableEnPassantCapture();
+Bool isInCheckMate(Board*);
 
 Bool dragging = False;
 node enPassantPawnsLL;
@@ -291,7 +292,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                // Move to empty cell
                else if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->validCells))
                {
-                   // TODO: edit valid and capture cells of piece to only show moves which would resolve the check condtition
                    updateBoard(testBoard, gc->row, gc->col, testPiece);
                    if (!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
                    {
@@ -441,4 +441,22 @@ void disableEnPassantCapture()
         cur = cur->next;
     }
     // enPassantPawnsLL = NULL;
+}
+
+Bool isInCheckMate(Board* board)
+{
+    // TODO: possible solution is to make valid cells and capture cells functions only
+    // return cells which do not put the king in check. Then iterate over everypiece
+    // and if no valid cells found it means the king is in check mate
+    if(state == WHITE_IN_PLAY)
+    {
+
+    }
+
+    else if (state == BLACK_IN_PLAY)
+    {
+
+    }
+
+    return False;
 }
