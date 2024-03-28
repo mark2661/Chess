@@ -275,6 +275,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
             Board* testBoard = deepCopyBoard(board);
 
             GridCell* gc = getCellByMousePosition(board);
+            // TODO: Add checkmate/win condition logic
             if(gc != NULL && gc->piece != NULL && testBoard != NULL)
             {
                // Check for Castling move
@@ -315,8 +316,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                }
 
                // Check for En Passant capture
-               // TODO: might need to check for "king in check"
-               // TODO: En Passant should only be valid for one turn
                else if ((piece->piece == WHITE_PAWN) || (piece->piece == BLACK_PAWN))
                {
                    if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->enPassantCells))
@@ -326,16 +325,23 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                            if (gc->row < dragPiece->originalPosition.x)
                            {
                                GridCell *enemyPawnCell = getCellByIndex(board, (gc->row + 1), gc->col);
-
-                               // remove captured piece
-                               freePiece(enemyPawnCell);
-                               // set cell containing captured pawn to "EMPTY"
-                               updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
-                               // move player pawn to the En Passant capture cell
-                               updateBoard(board, gc->row, gc->col, piece);
-                               state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
-                               moveAccepted = True;
-                           }
+                               if(endDragOperation != NULL)
+                               {
+                                   updateBoard(testBoard, enemyPawnCell->row, enemyPawnCell->col, NULL);
+                                   updateBoard(testBoard, gc->row, gc->col, testPiece);
+                                   if (!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
+                                   {
+                                       // remove captured piece
+                                       freePiece(enemyPawnCell);
+                                       // set cell containing captured pawn to "EMPTY"
+                                       updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
+                                       // move player pawn to the En Passant capture cell
+                                       updateBoard(board, gc->row, gc->col, piece);
+                                       state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                                       moveAccepted = True;
+                                   }
+                               }
+                         }
                        }
 
                        else if (isBlackPiece(piece))
@@ -343,15 +349,22 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                            if (gc->row > dragPiece->originalPosition.x)
                            {
                                GridCell *enemyPawnCell = getCellByIndex(board, (gc->row - 1), gc->col);
-
-                               // remove captured piece
-                               freePiece(enemyPawnCell);
-                               // set cell containing captured pawn to "EMPTY"
-                               updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
-                               // move player pawn to the En Passant capture cell
-                               updateBoard(board, gc->row, gc->col, piece);
-                               state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
-                               moveAccepted = True;
+                               if (enemyPawnCell != NULL)
+                               {
+                                   updateBoard(testBoard, enemyPawnCell->row, enemyPawnCell->col, NULL);
+                                   updateBoard(testBoard, gc->row, gc->col, testPiece);
+                                   if (!isInCheck(testBoard, (state == WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK))
+                                   {
+                                       // remove captured piece
+                                       freePiece(enemyPawnCell);
+                                       // set cell containing captured pawn to "EMPTY"
+                                       updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
+                                       // move player pawn to the En Passant capture cell
+                                       updateBoard(board, gc->row, gc->col, piece);
+                                       state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                                       moveAccepted = True;
+                                   }
+                               }
                            }
                        }
                    }
