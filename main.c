@@ -370,9 +370,10 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    }
                }
 
-               // TODO: fix bug, piece moves count not updating, think it's because pieces are being deep copied multiple times
                if (moveAccepted)
                {
+                   // update pawn set (A hashset which keeps track of pawns that have already moved)
+                   if(piece->piece == WHITE_PAWN || piece->piece == BLACK_PAWN) { insert(board->pawnSet, piece); }
                    incrementPieceMoveCount(gc->piece);
                    disableEnPassantCapture();
                }
@@ -380,8 +381,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                else
                {
 
-                   // TODO: Fix bug where a pawn's initial move is invalid but it is still added to the pawnSet meaning it
-                   // no longer has the option of moving two squares in front
                    GridCell *originalGridCell = getCellByIndex(board, dragPiece->originalPosition.x, dragPiece->originalPosition.y);
                    if (originalGridCell != NULL)
                    {

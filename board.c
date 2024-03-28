@@ -372,7 +372,7 @@ node getValidCells(Board* board, GridCell* currentCell)
             {
                 // forward cell
                 GridCell* cell = getCellByIndex(board, currentCell->row - 1, currentCell->col);
-                if (cell != NULL)
+                if (cell != NULL && cell->piece != NULL && cell->piece->piece == EMPTY)
                 {
                     GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                     if (!testCheck(board, originalCell, cell, PLAYER_WHITE))
@@ -384,7 +384,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                 if (!contains(board->pawnSet, currentCell->piece))
                 {
                     cell = getCellByIndex(board, currentCell->row - 2, currentCell->col);
-                    if (cell != NULL)
+                    if (cell != NULL && cell->piece != NULL && cell->piece->piece == EMPTY)
                     {
                         GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                         if (!testCheck(board, originalCell, cell, PLAYER_WHITE))
@@ -393,7 +393,6 @@ node getValidCells(Board* board, GridCell* currentCell)
                         }
                     }
                 }
-                insert(board->pawnSet, currentCell->piece);
             }
             return head->next;
             break;
@@ -402,7 +401,7 @@ node getValidCells(Board* board, GridCell* currentCell)
             // forward cell
             {
                 GridCell* cell = getCellByIndex(board, currentCell->row + 1, currentCell->col);
-                if (cell != NULL)
+                if (cell != NULL && cell->piece != NULL && cell->piece->piece == EMPTY)
                 {
                     GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                     if (!testCheck(board, originalCell, cell, PLAYER_BLACK))
@@ -414,7 +413,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                 if (!contains(board->pawnSet, currentCell->piece))
                 {
                     cell = getCellByIndex(board, currentCell->row + 2, currentCell->col);
-                    if (cell != NULL)
+                    if (cell != NULL && cell->piece != NULL && cell->piece->piece == EMPTY)
                     {
                         GridCell *originalCell = getCellByIndex(board, currentCell->row, currentCell->col);
                         if (!testCheck(board, originalCell, cell, PLAYER_BLACK))
@@ -423,7 +422,6 @@ node getValidCells(Board* board, GridCell* currentCell)
                         }
                     }
                 }
-                insert(board->pawnSet, currentCell->piece);
             }
             return head->next;
             break;
