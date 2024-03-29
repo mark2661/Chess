@@ -778,7 +778,11 @@ node getCaptureCells(Board* board, GridCell* gc)
             {
                 if (isBlackPiece(cur->gc->piece))
                 {
-                    
+                     // TODO: BUG(1)(FIXED) Think call to test check is causing the programme to crash
+                     // the game works fine for a while then eventually freezes 
+                     // game appears to work alot longer without freezing when call to testCheck is commented out
+                     // not fully tested that though.
+                     // update: there are circular calls here testCheck calls -> isInCheck -> getCaptureCells
                     if(!testCheck(board, gc, cur->gc, PLAYER_WHITE))
                     {
                         if (head == NULL)
@@ -812,6 +816,54 @@ node getCaptureCells(Board* board, GridCell* gc)
                         }
                     }
                }
+            }
+
+            cur = cur->next;
+        }
+
+        return head;
+    }
+}
+
+node getCaptureCellsIgnoreCheck(Board* board, GridCell* gc)
+{
+    if (gc != NULL && gc->piece != NULL && gc->piece->piece != EMPTY)
+    {
+        node head = NULL;
+        node cur = getLineOfSightCells(board, gc);
+        while (cur != NULL)
+        {
+            if (isWhitePiece(gc->piece))
+            {
+                if (isBlackPiece(cur->gc->piece))
+                {
+
+                    if (head == NULL)
+                    {
+                        head = createNode();
+                        head->gc = cur->gc;
+                    }
+                    else
+                    {
+                        head = addNode(head, cur->gc);
+                    }
+                }
+            }
+
+            else if (isBlackPiece(gc->piece))
+            {
+                if (isWhitePiece(cur->gc->piece))
+                {
+                    if (head == NULL)
+                    {
+                        head = createNode();
+                        head->gc = cur->gc;
+                    }
+                    else
+                    {
+                        head = addNode(head, cur->gc);
+                    }
+                }
             }
 
             cur = cur->next;
@@ -1444,7 +1496,7 @@ Bool isInCheck(Board* board, Player player)
                     GridCell* gc = getCellByIndex(board, row, col);
                     if(gc != NULL && gc->piece != NULL && isBlackPiece(gc->piece))
                     {
-                        node enemyCaptureCells = getCaptureCells(board, gc);
+                        node enemyCaptureCells = getCaptureCellsIgnoreCheck(board, gc);
                         if (contains_LL(enemyCaptureCells, kingGridCell))
                         {
                             return True;
@@ -1466,7 +1518,7 @@ Bool isInCheck(Board* board, Player player)
                     GridCell *gc = getCellByIndex(board, row, col);
                     if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
                     {
-                        node enemyCaptureCells = getCaptureCells(board, gc);
+                        node enemyCaptureCells = getCaptureCellsIgnoreCheck(board, gc);
                         if(contains_LL(enemyCaptureCells, kingGridCell))
                         {
                             return True;
@@ -1496,7 +1548,7 @@ Bool testCheck(Board* board, GridCell* originCell, GridCell* destinationCell, Pl
     // Add piece to test positon
     updateBoard(testBoard, destinationCell->row, destinationCell->col, testPiece);
 
-    Bool res = isInCheck(testBoard, player);
+    Bool res = isInCheck(testBoard, player); 
 
     freeBoard(testBoard);
     return res;

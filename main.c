@@ -72,6 +72,11 @@ int main(void)
         case BLACK_PIECE_SELECT_MENU:
             pieceSelectMenuIteration(&board, PLAYER_BLACK);
             break;
+        case GAME_OVER:
+            printf("Check mate!\n"); 
+            EndDrawing();
+            CloseWindow();
+            break;
         default:
             break;
         }
@@ -286,7 +291,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    // Accept move
                    updateBoard(board, gc->row, gc->col, piece);
                    performCastle(board, gc);
-                   state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                    moveAccepted = True;
                }
                // Move to empty cell
@@ -297,7 +302,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    {
                        // Accept move
                        updateBoard(board, gc->row, gc->col, piece);
-                       state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                    //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                        moveAccepted = True;
                    }
                }
@@ -310,7 +315,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                        // remove captured piece
                        freePiece(gc);
                        updateBoard(board, gc->row, gc->col, piece);
-                       state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                    //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                        moveAccepted = True;
                    }
                }
@@ -333,7 +338,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                                    updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
                                    // move player pawn to the En Passant capture cell
                                    updateBoard(board, gc->row, gc->col, piece);
-                                   state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                                //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                                    moveAccepted = True;
                                }
                          }
@@ -352,7 +357,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                                    updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
                                    // move player pawn to the En Passant capture cell
                                    updateBoard(board, gc->row, gc->col, piece);
-                                   state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                                //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                                    moveAccepted = True;
                                }
                            }
@@ -366,6 +371,8 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    if(piece->piece == WHITE_PAWN || piece->piece == BLACK_PAWN) { insert(board->pawnSet, piece); }
                    incrementPieceMoveCount(gc->piece);
                    disableEnPassantCapture();
+                   state = (isInCheckMate(board)) ? GAME_OVER : (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                }
                // Invalid move return to origin cell
                else
@@ -442,6 +449,7 @@ Bool isInCheckMate(Board* board)
     {
         if(isInCheck(board, PLAYER_WHITE))
         {
+            printf("\n#################################################################\n");
             for (size_t row = 0; row < 8; row++)
             {
                 for (size_t col = 0; col < 8; col++)
@@ -449,6 +457,7 @@ Bool isInCheckMate(Board* board)
                     GridCell *gc = getCellByIndex(board, row, col);
                     if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
                     {
+                        printf("Row: %ld, Col: %ld\n", row, col);
                         node validCells = getValidCells(board, gc);
                         node captureCells = getCaptureCells(board, gc);
                         node enPassantCells = getEnPassantCells(board, gc);
@@ -456,13 +465,17 @@ Bool isInCheckMate(Board* board)
                     }
                 }
             }
+            printf("\n#################################################################\n");
         }
+        else { return False; }
    }
 
     else if (state == BLACK_IN_PLAY)
     {
-        if(isInCheck(board, PLAYER_WHITE))
+        printf("Herez\n");
+        if(isInCheck(board, PLAYER_BLACK))
         {
+            printf("\n#################################################################\n");
             for (size_t row = 0; row < 8; row++)
             {
                 for (size_t col = 0; col < 8; col++)
@@ -470,6 +483,7 @@ Bool isInCheckMate(Board* board)
                     GridCell *gc = getCellByIndex(board, row, col);
                     if (gc != NULL && gc->piece != NULL && isBlackPiece(gc->piece))
                     {
+                        printf("Row: %ld, Col: %ld\n", row, col);
                         node validCells = getValidCells(board, gc);
                         node captureCells = getCaptureCells(board, gc);
                         node enPassantCells = getEnPassantCells(board, gc);
@@ -477,7 +491,9 @@ Bool isInCheckMate(Board* board)
                     }
                 }
             }
+            printf("\n#################################################################\n");
         }
+        else { return False; }
    }
 
     return True; 

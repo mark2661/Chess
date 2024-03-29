@@ -53,6 +53,7 @@ void performCastle(Board*, GridCell*);
 void performKingSideCastle(Board*, GridCell*);
 void performQueenSideCastle(Board*, GridCell*);
 node getCaptureCells(Board*, GridCell*);
+node getCaptureCellsIgnoreCheck(Board*, GridCell*);
 node getEnPassantCells(Board*, GridCell*);
 node getEnPassantNeighours(Board*, GridCell*);
 Bool isWhitePiece(Piece*);
