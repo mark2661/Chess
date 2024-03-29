@@ -361,7 +361,10 @@ node getValidCells(Board* board, GridCell* currentCell)
     if(currentCell != NULL && currentCell->piece != NULL)
     {
         ChessPiece pieceType = currentCell->piece->piece;
-        node head = createNode();
+        // TODO: by not starting with head == NULL this is probably affecting the checkmate check
+        // since an empty node is returned instead of NULL
+        // node head = createNode();
+        node head = NULL;
         int row;
         int col;
         Pair positions[8];
@@ -394,7 +397,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                     }
                 }
             }
-            return head->next;
+            return head;
             break;
 
         case BLACK_PAWN:
@@ -423,7 +426,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                     }
                 }
             }
-            return head->next;
+            return head;
             break;
 
             case WHITE_CASTLE:
@@ -454,7 +457,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                     row = currentCell->row;
                     col = currentCell->col;
                 }
-                return head->next;
+                return head;
                 break;
 
             case WHITE_BISHOP:
@@ -487,7 +490,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                     col = currentCell->col;
                 }
 
-                return head->next;
+                return head;
                 break;
 
             case WHITE_KNIGHT:
@@ -513,7 +516,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                     row = currentCell->row;
                     col = currentCell->col;
                 }
-                return head->next;
+                return head;
                 break;
 
             case WHITE_QUEEN:
@@ -545,7 +548,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                     row = currentCell->row;
                     col = currentCell->col;
                 }
-                return head->next;
+                return head;
                 break;
 
             case WHITE_KING:
@@ -572,7 +575,7 @@ node getValidCells(Board* board, GridCell* currentCell)
                     row = currentCell->row;
                     col = currentCell->col;
                 }
-                return head->next;
+                return head;
                 break;
 
             default:

@@ -73,9 +73,11 @@ int main(void)
             pieceSelectMenuIteration(&board, PLAYER_BLACK);
             break;
         case GAME_OVER:
+        // TODO: Implement proper game over logic
             printf("Check mate!\n"); 
             EndDrawing();
             CloseWindow();
+            return 0;
             break;
         default:
             break;
@@ -389,13 +391,13 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
 
                // TODO: create a function which encapsulates all the logic associated with state transition
                // maybe don't need to do this anymore?
-               if (gc->piece->piece == WHITE_PAWN && gc->row == 0)
+               if (state != GAME_OVER && gc->piece->piece == WHITE_PAWN && gc->row == 0)
                {
                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_WHITE);
                    pawnPromotionCell = gc;
                    state = WHITE_PIECE_SELECT_MENU;
                }
-               else if (gc->piece->piece == BLACK_PAWN && gc->row == 7)
+               else if (state != GAME_OVER && gc->piece->piece == BLACK_PAWN && gc->row == 7)
                {
                    menu = createMenu("Pawn Promoted: Select New Piece", options, options_length, PLAYER_BLACK);
                    pawnPromotionCell = gc;
@@ -445,56 +447,61 @@ Bool isInCheckMate(Board* board)
     // TODO: possible solution is to make valid cells and capture cells functions only
     // return cells which do not put the king in check. Then iterate over everypiece
     // and if no valid cells found it means the king is in check mate
-    if(state == WHITE_IN_PLAY)
-    {
-        if(isInCheck(board, PLAYER_WHITE))
-        {
-            printf("\n#################################################################\n");
-            for (size_t row = 0; row < 8; row++)
-            {
-                for (size_t col = 0; col < 8; col++)
-                {
-                    GridCell *gc = getCellByIndex(board, row, col);
-                    if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
-                    {
-                        printf("Row: %ld, Col: %ld\n", row, col);
-                        node validCells = getValidCells(board, gc);
-                        node captureCells = getCaptureCells(board, gc);
-                        node enPassantCells = getEnPassantCells(board, gc);
-                        if (validCells != NULL || captureCells != NULL || enPassantCells != NULL) { return False; }
-                    }
-                }
-            }
-            printf("\n#################################################################\n");
-        }
-        else { return False; }
-   }
 
-    else if (state == BLACK_IN_PLAY)
+    if (isInCheck(board, PLAYER_WHITE))
     {
-        printf("Herez\n");
-        if(isInCheck(board, PLAYER_BLACK))
+        printf("\n#################################################################\n");
+        for (size_t row = 0; row < 8; row++)
         {
-            printf("\n#################################################################\n");
-            for (size_t row = 0; row < 8; row++)
+            for (size_t col = 0; col < 8; col++)
             {
-                for (size_t col = 0; col < 8; col++)
+                GridCell *gc = getCellByIndex(board, row, col);
+                if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
                 {
-                    GridCell *gc = getCellByIndex(board, row, col);
-                    if (gc != NULL && gc->piece != NULL && isBlackPiece(gc->piece))
+                    printf("Row: %ld, Col: %ld\n", row, col);
+                    node validCells = getValidCells(board, gc);
+                    node captureCells = getCaptureCells(board, gc);
+                    node enPassantCells = getEnPassantCells(board, gc);
+                    printf("ValidCells: %d, CaptureCells: %d, enPassantCells: %d\n", (validCells == NULL), (captureCells == NULL), (enPassantCells == NULL));
+                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL)
                     {
-                        printf("Row: %ld, Col: %ld\n", row, col);
-                        node validCells = getValidCells(board, gc);
-                        node captureCells = getCaptureCells(board, gc);
-                        node enPassantCells = getEnPassantCells(board, gc);
-                        if (validCells != NULL || captureCells != NULL || enPassantCells != NULL) { return False; }
+                        return False;
                     }
                 }
             }
-            printf("\n#################################################################\n");
         }
-        else { return False; }
-   }
+        printf("\n#################################################################\n");
+    }
+
+    else if (isInCheck(board, PLAYER_BLACK))
+    {
+        printf("\n#################################################################\n");
+        for (size_t row = 0; row < 8; row++)
+        {
+            for (size_t col = 0; col < 8; col++)
+            {
+                GridCell *gc = getCellByIndex(board, row, col);
+                if (gc != NULL && gc->piece != NULL && isBlackPiece(gc->piece))
+                {
+                    printf("Row: %ld, Col: %ld\n", row, col);
+                    node validCells = getValidCells(board, gc);
+                    node captureCells = getCaptureCells(board, gc);
+                    node enPassantCells = getEnPassantCells(board, gc);
+                    printf("ValidCells: %d, CaptureCells: %d, enPassantCells: %d\n", (validCells == NULL), (captureCells == NULL), (enPassantCells == NULL));
+                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL)
+                    {
+                        return False;
+                    }
+                }
+            }
+        }
+        printf("\n#################################################################\n");
+    }
+
+    else
+    {
+        return False;
+    }
 
     return True; 
 }
