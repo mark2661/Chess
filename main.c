@@ -283,7 +283,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
             Board* testBoard = deepCopyBoard(board);
 
             GridCell* gc = getCellByMousePosition(board);
-            // TODO: Add checkmate/win condition logic
             if(gc != NULL && gc->piece != NULL && testBoard != NULL)
             {
                // Check for Castling move
@@ -462,8 +461,10 @@ Bool isInCheckMate(Board* board)
                     node validCells = getValidCells(board, gc);
                     node captureCells = getCaptureCells(board, gc);
                     node enPassantCells = getEnPassantCells(board, gc);
-                    printf("ValidCells: %d, CaptureCells: %d, enPassantCells: %d\n", (validCells == NULL), (captureCells == NULL), (enPassantCells == NULL));
-                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL)
+                    node castlingCells = getCastlingCells(board, gc);
+                    // TODO: Should check castling cells as well. King may be able to castle to escape check
+                    // printf("ValidCells: %d, CaptureCells: %d, enPassantCells: %d\n", (validCells == NULL), (captureCells == NULL), (enPassantCells == NULL));
+                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL || castlingCells != NULL)
                     {
                         return False;
                     }
@@ -487,8 +488,9 @@ Bool isInCheckMate(Board* board)
                     node validCells = getValidCells(board, gc);
                     node captureCells = getCaptureCells(board, gc);
                     node enPassantCells = getEnPassantCells(board, gc);
-                    printf("ValidCells: %d, CaptureCells: %d, enPassantCells: %d\n", (validCells == NULL), (captureCells == NULL), (enPassantCells == NULL));
-                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL)
+                    node castlingCells = getCastlingCells(board, gc);
+                    // printf("ValidCells: %d, CaptureCells: %d, enPassantCells: %d\n", (validCells == NULL), (captureCells == NULL), (enPassantCells == NULL));
+                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL || castlingCells != NULL)
                     {
                         return False;
                     }
