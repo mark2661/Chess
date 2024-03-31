@@ -8,6 +8,8 @@
 
 #define PIECE_SELECT_MENU_OPTIONS {"CASTLE", "KNIGHT", "BISHOP", "QUEEN"}
 #define PIECE_SELECT_MENU_OPTIONS_LENGTH 4
+#define GAME_OVER_MENU_OPTIONS {"Restart", "Quit"}
+#define GAME_OVER_MENU_OPTIONS_LENGTH 2
 typedef struct DragPiece{
     Piece piece;
     Vector2 originalPosition;
@@ -24,6 +26,7 @@ DragPiece* startDragOperation(Board*, Player);
 void endDragOperation(Board*, DragPiece*);
 void gameIteration(Board*, Player);
 void pieceSelectMenuIteration(Board*, Player);
+void gameOverMenuIteration(Board*);
 void reEnableEnPassantCapture();
 void disableEnPassantCapture();
 Bool isInCheckMate(Board*);
@@ -37,6 +40,9 @@ GridCell* pawnPromotionCell = NULL;
 
 char *options[PIECE_SELECT_MENU_OPTIONS_LENGTH] = PIECE_SELECT_MENU_OPTIONS;
 size_t options_length = PIECE_SELECT_MENU_OPTIONS_LENGTH;
+
+char* gameOverMenuOptions[GAME_OVER_MENU_OPTIONS_LENGTH] = GAME_OVER_MENU_OPTIONS;
+size_t gameOverMenuOptionsLength = GAME_OVER_MENU_OPTIONS_LENGTH;
 
 // DEBUG
 // GameState state = WHITE_PIECE_SELECT_MENU;
@@ -73,8 +79,20 @@ int main(void)
             pieceSelectMenuIteration(&board, PLAYER_BLACK);
             break;
         case GAME_OVER:
-        // TODO: Implement proper game over logic
-            printf("Check mate!\n"); 
+            gameOverMenuIteration(&board);
+            break;
+        case RESTART:
+            dragging = False;
+            enPassantPawnsLL = NULL;
+            menu = NULL;
+            pawnPromotionCell = NULL;
+            // TODO: may need to make another function to free stack allocated boards
+            // because even though the board is stack allocated the board has gridCell structs created on the heap
+            // freeBoard(&board);
+            board = initBoard();
+            state = WHITE_IN_PLAY;
+            break;
+        case QUIT:
             EndDrawing();
             CloseWindow();
             return 0;
@@ -174,6 +192,42 @@ void pieceSelectMenuIteration(Board* board, Player player)
 
                 if(player == PLAYER_WHITE) { state = BLACK_IN_PLAY; }
                 else if (player == PLAYER_BLACK) { state = WHITE_IN_PLAY; }
+            }
+        }
+    }
+}
+
+void gameOverMenuIteration(Board* board)
+{
+    menu->title->message = "GAME OVER!";
+    menu->title->messagePosition.y = MENU_TITLE_START_HEIGHT;
+    DrawText(menu->title->message, menu->title->messagePosition.x, menu->title->messagePosition.y, MENU_TEXT_FONT_SIZE, BLACK);
+
+    // Render menu items
+    for(size_t i=0; i<GAME_OVER_MENU_OPTIONS_LENGTH; i++)
+    {
+        MenuItem *item = menu->menuItems[i];
+        if (item != NULL)
+        {
+            DrawText(item->message, item->messagePosition.x, item->messagePosition.y, MENU_TEXT_FONT_SIZE, BLACK);
+
+            // Draw bounding box if mousing over text
+            if (CheckCollisionPointRec(GetMousePosition(), item->boundingBox))
+            {
+                DrawRectangleLinesEx(item->boundingBox, 3.0f, RED);
+            }
+            // detect click
+            if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), item->boundingBox))
+            {
+                if(strcmp(item->message, "Restart") == 0)
+                {
+                    state = RESTART;
+                }
+                else if (strcmp(item->message, "Quit") == 0)
+                {
+                    state = QUIT;
+                }
+                
             }
         }
     }
@@ -372,7 +426,12 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    if(piece->piece == WHITE_PAWN || piece->piece == BLACK_PAWN) { insert(board->pawnSet, piece); }
                    incrementPieceMoveCount(gc->piece);
                    disableEnPassantCapture();
+                   GameState previousState = state;
                    state = (isInCheckMate(board)) ? GAME_OVER : (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                   if(state == GAME_OVER)
+                   {
+                        menu = createMenu("GAME OVER!", gameOverMenuOptions, gameOverMenuOptionsLength, (previousState==WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK);
+                   }
                 //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                }
                // Invalid move return to origin cell
@@ -443,13 +502,8 @@ void disableEnPassantCapture()
 
 Bool isInCheckMate(Board* board)
 {
-    // TODO: possible solution is to make valid cells and capture cells functions only
-    // return cells which do not put the king in check. Then iterate over everypiece
-    // and if no valid cells found it means the king is in check mate
-
     if (isInCheck(board, PLAYER_WHITE))
     {
-        printf("\n#################################################################\n");
         for (size_t row = 0; row < 8; row++)
         {
             for (size_t col = 0; col < 8; col++)
@@ -457,13 +511,10 @@ Bool isInCheckMate(Board* board)
                 GridCell *gc = getCellByIndex(board, row, col);
                 if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
                 {
-                    printf("Row: %ld, Col: %ld\n", row, col);
                     node validCells = getValidCells(board, gc);
                     node captureCells = getCaptureCells(board, gc);
                     node enPassantCells = getEnPassantCells(board, gc);
                     node castlingCells = getCastlingCells(board, gc);
-                    // TODO: Should check castling cells as well. King may be able to castle to escape check
-                    // printf("ValidCells: %d, CaptureCells: %d, enPassantCells: %d\n", (validCells == NULL), (captureCells == NULL), (enPassantCells == NULL));
                     if (validCells != NULL || captureCells != NULL || enPassantCells != NULL || castlingCells != NULL)
                     {
                         return False;
@@ -471,12 +522,10 @@ Bool isInCheckMate(Board* board)
                 }
             }
         }
-        printf("\n#################################################################\n");
     }
 
     else if (isInCheck(board, PLAYER_BLACK))
     {
-        printf("\n#################################################################\n");
         for (size_t row = 0; row < 8; row++)
         {
             for (size_t col = 0; col < 8; col++)
@@ -484,12 +533,10 @@ Bool isInCheckMate(Board* board)
                 GridCell *gc = getCellByIndex(board, row, col);
                 if (gc != NULL && gc->piece != NULL && isBlackPiece(gc->piece))
                 {
-                    printf("Row: %ld, Col: %ld\n", row, col);
                     node validCells = getValidCells(board, gc);
                     node captureCells = getCaptureCells(board, gc);
                     node enPassantCells = getEnPassantCells(board, gc);
                     node castlingCells = getCastlingCells(board, gc);
-                    // printf("ValidCells: %d, CaptureCells: %d, enPassantCells: %d\n", (validCells == NULL), (captureCells == NULL), (enPassantCells == NULL));
                     if (validCells != NULL || captureCells != NULL || enPassantCells != NULL || castlingCells != NULL)
                     {
                         return False;
@@ -497,7 +544,6 @@ Bool isInCheckMate(Board* board)
                 }
             }
         }
-        printf("\n#################################################################\n");
     }
 
     else
