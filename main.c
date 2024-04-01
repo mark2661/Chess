@@ -67,18 +67,23 @@ int main(void)
         switch (state)
         {
         case WHITE_IN_PLAY:
+            SetWindowTitle("Chezz(TM) - WHITES TURN");
             gameIteration(&board, PLAYER_WHITE);
             break;
         case BLACK_IN_PLAY: 
+            SetWindowTitle("Chezz(TM) - BLACKS TURN");
             gameIteration(&board, PLAYER_BLACK);
             break;
         case WHITE_PIECE_SELECT_MENU:
+            SetWindowTitle("Chezz(TM) - WHITES TURN");
             pieceSelectMenuIteration(&board, PLAYER_WHITE);
             break;
         case BLACK_PIECE_SELECT_MENU:
+            SetWindowTitle("Chezz(TM) - BLACKS TURN");
             pieceSelectMenuIteration(&board, PLAYER_BLACK);
             break;
         case GAME_OVER:
+            // TODO: Implemetn game drawn end game state
             gameOverMenuIteration(&board);
             break;
         case RESTART:
@@ -346,7 +351,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    // Accept move
                    updateBoard(board, gc->row, gc->col, piece);
                    performCastle(board, gc);
-                //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                    moveAccepted = True;
                }
                // Move to empty cell
@@ -357,7 +361,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    {
                        // Accept move
                        updateBoard(board, gc->row, gc->col, piece);
-                    //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                        moveAccepted = True;
                    }
                }
@@ -370,7 +373,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                        // remove captured piece
                        freePiece(gc);
                        updateBoard(board, gc->row, gc->col, piece);
-                    //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                        moveAccepted = True;
                    }
                }
@@ -393,7 +395,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                                    updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
                                    // move player pawn to the En Passant capture cell
                                    updateBoard(board, gc->row, gc->col, piece);
-                                //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                                    moveAccepted = True;
                                }
                          }
@@ -412,7 +413,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                                    updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
                                    // move player pawn to the En Passant capture cell
                                    updateBoard(board, gc->row, gc->col, piece);
-                                //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                                    moveAccepted = True;
                                }
                            }
@@ -432,7 +432,6 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    {
                         menu = createMenu("GAME OVER!", gameOverMenuOptions, gameOverMenuOptionsLength, (previousState==WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK);
                    }
-                //    state = (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
                }
                // Invalid move return to origin cell
                else
@@ -514,8 +513,7 @@ Bool isInCheckMate(Board* board)
                     node validCells = getValidCells(board, gc);
                     node captureCells = getCaptureCells(board, gc);
                     node enPassantCells = getEnPassantCells(board, gc);
-                    node castlingCells = getCastlingCells(board, gc);
-                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL || castlingCells != NULL)
+                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL)
                     {
                         return False;
                     }
@@ -536,8 +534,7 @@ Bool isInCheckMate(Board* board)
                     node validCells = getValidCells(board, gc);
                     node captureCells = getCaptureCells(board, gc);
                     node enPassantCells = getEnPassantCells(board, gc);
-                    node castlingCells = getCastlingCells(board, gc);
-                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL || castlingCells != NULL)
+                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL)
                     {
                         return False;
                     }
