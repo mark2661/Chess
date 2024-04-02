@@ -30,10 +30,13 @@ void gameOverMenuIteration(Board*);
 void reEnableEnPassantCapture();
 void disableEnPassantCapture();
 Bool isInCheckMate(Board*);
+Bool isInStaleMate(Board*);
 
 Bool dragging = False;
 node enPassantPawnsLL;
 GameState state = WHITE_IN_PLAY;
+// An unprogressive move is a move where neither a pawn is moved or a piece has been captured
+uint32_t consecutiveUnprogressiveMoves = 0;
 
 Menu* menu = NULL;
 GridCell* pawnPromotionCell = NULL;
@@ -48,10 +51,31 @@ size_t gameOverMenuOptionsLength = GAME_OVER_MENU_OPTIONS_LENGTH;
 // GameState state = WHITE_PIECE_SELECT_MENU;
 // DEBUG
 
+// AUDIO TEST
+Sound moveSound;
+Sound captureSound;
+Sound illegalMoveSound;
+Sound pawnPromotionSound;
+Sound castleSound;
+Sound checkSound;
+Sound gameOverSound;
+
+// TODO: Add sound effects
 int main(void)
 {
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chezz(TM)");
+    InitAudioDevice();
+
+
+    // Load audio assests into memory
+    moveSound = LoadSound("./chess_move.mp3");
+    captureSound = LoadSound("./chess_capture.mp3");
+    illegalMoveSound = LoadSound("./chess_illegal.mp3");
+    pawnPromotionSound = LoadSound("./chess_promote.mp3");
+    castleSound = LoadSound("./chess_castle.mp3");
+    checkSound = LoadSound("./chess_check.mp3");
+    gameOverSound = LoadSound("./chess_game_over.mp3");
 
     SetTargetFPS(60);
 
@@ -99,6 +123,7 @@ int main(void)
             break;
         case QUIT:
             EndDrawing();
+            CloseAudioDevice();
             CloseWindow();
             return 0;
             break;
@@ -109,6 +134,7 @@ int main(void)
         EndDrawing();
     }
 
+    CloseAudioDevice();
     CloseWindow();
 
     return 0;
@@ -195,6 +221,7 @@ void pieceSelectMenuIteration(Board* board, Player player)
                 pawnPromotionCell->piece->piece = item->piece;
                 pawnPromotionCell->piece->textureRect = getTextureRect(item->piece);
 
+                PlaySound(pawnPromotionSound);
                 if(player == PLAYER_WHITE) { state = BLACK_IN_PLAY; }
                 else if (player == PLAYER_BLACK) { state = WHITE_IN_PLAY; }
             }
@@ -351,6 +378,8 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    // Accept move
                    updateBoard(board, gc->row, gc->col, piece);
                    performCastle(board, gc);
+                   consecutiveUnprogressiveMoves += 1;
+                   PlaySound(castleSound);
                    moveAccepted = True;
                }
                // Move to empty cell
@@ -361,6 +390,21 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    {
                        // Accept move
                        updateBoard(board, gc->row, gc->col, piece);
+                       if(piece->piece != WHITE_PAWN && piece->piece != BLACK_PAWN)
+                       {
+                           consecutiveUnprogressiveMoves += 1;
+                       }
+                       else
+                       {
+                           consecutiveUnprogressiveMoves = 0;
+                       }
+
+                       if (!isInCheck(board, (state == WHITE_IN_PLAY) ? PLAYER_BLACK : PLAYER_WHITE))
+                       {
+                           PlaySound(moveSound);
+                       }
+                       else { PlaySound(checkSound); }
+
                        moveAccepted = True;
                    }
                }
@@ -373,6 +417,12 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                        // remove captured piece
                        freePiece(gc);
                        updateBoard(board, gc->row, gc->col, piece);
+                       consecutiveUnprogressiveMoves = 0;
+                       if (!isInCheck(board, (state == WHITE_IN_PLAY) ? PLAYER_BLACK : PLAYER_WHITE))
+                       {
+                           PlaySound(captureSound);
+                       }
+                       else { PlaySound(checkSound); }
                        moveAccepted = True;
                    }
                }
@@ -395,6 +445,16 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                                    updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
                                    // move player pawn to the En Passant capture cell
                                    updateBoard(board, gc->row, gc->col, piece);
+                                   consecutiveUnprogressiveMoves = 0;
+                                   if (!isInCheck(board, (state == WHITE_IN_PLAY) ? PLAYER_BLACK : PLAYER_WHITE))
+                                   {
+                                       PlaySound(captureSound);
+                                   }
+                                   else
+                                   {
+                                       PlaySound(checkSound);
+                                   }
+
                                    moveAccepted = True;
                                }
                          }
@@ -413,6 +473,17 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                                    updateBoard(board, enemyPawnCell->row, enemyPawnCell->col, NULL);
                                    // move player pawn to the En Passant capture cell
                                    updateBoard(board, gc->row, gc->col, piece);
+                                   consecutiveUnprogressiveMoves = 0;
+
+                                   if (!isInCheck(board, (state == WHITE_IN_PLAY) ? PLAYER_BLACK : PLAYER_WHITE))
+                                   {
+                                       PlaySound(captureSound);
+                                   }
+                                   else
+                                   {
+                                       PlaySound(checkSound);
+                                   }
+
                                    moveAccepted = True;
                                }
                            }
@@ -427,9 +498,10 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                    incrementPieceMoveCount(gc->piece);
                    disableEnPassantCapture();
                    GameState previousState = state;
-                   state = (isInCheckMate(board)) ? GAME_OVER : (state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY;
+                   state = ((isInStaleMate(board) || isInCheckMate(board)) ? GAME_OVER : ((state == WHITE_IN_PLAY) ? BLACK_IN_PLAY : WHITE_IN_PLAY));
                    if(state == GAME_OVER)
                    {
+                        PlaySound(gameOverSound);
                         menu = createMenu("GAME OVER!", gameOverMenuOptions, gameOverMenuOptionsLength, (previousState==WHITE_IN_PLAY) ? PLAYER_WHITE : PLAYER_BLACK);
                    }
                }
@@ -437,9 +509,11 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                else
                {
 
+                   // TODO: Add visual shake effect
                    GridCell *originalGridCell = getCellByIndex(board, dragPiece->originalPosition.x, dragPiece->originalPosition.y);
                    if (originalGridCell != NULL)
                    {
+                       PlaySound(illegalMoveSound);
                        updateBoard(board, originalGridCell->row, originalGridCell->col, piece);
                    }
                    reEnableEnPassantCapture();
@@ -549,4 +623,62 @@ Bool isInCheckMate(Board* board)
     }
 
     return True; 
+}
+
+Bool isInStaleMate(Board* board)
+{
+    // >= 50 Consecutive moves have been made where neither player has moved a pawn or captured a piece
+    if (consecutiveUnprogressiveMoves >= 50) { return True; }
+    // TODO: Add a condition to check if the game has been in the same state three times( at any point during the game)
+    // think a hash table where the state is the key and the value is the amount of times that state has been seen
+
+    // Check that the player is not in check but has no valid moves to make (this is a stalemate condition)
+    if(!isInCheck(board, PLAYER_WHITE))
+    {
+        for (size_t row = 0; row < 8; row++)
+        {
+            for (size_t col = 0; col < 8; col++)
+            {
+                GridCell *gc = getCellByIndex(board, row, col);
+                if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
+                {
+                    node validCells = getValidCells(board, gc);
+                    node captureCells = getCaptureCells(board, gc);
+                    node enPassantCells = getEnPassantCells(board, gc);
+                    node castlingCells = getCastlingCells(board, gc);
+                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL || castlingCells != NULL)
+                    {
+                        return False;
+                    }
+                }
+            }
+        }
+    }
+
+    else if (!isInCheck(board, PLAYER_BLACK))
+    {
+        for (size_t row = 0; row < 8; row++)
+        {
+            for (size_t col = 0; col < 8; col++)
+            {
+                GridCell *gc = getCellByIndex(board, row, col);
+                if (gc != NULL && gc->piece != NULL && isWhitePiece(gc->piece))
+                {
+                    node validCells = getValidCells(board, gc);
+                    node captureCells = getCaptureCells(board, gc);
+                    node enPassantCells = getEnPassantCells(board, gc);
+                    node castlingCells = getCastlingCells(board, gc);
+                    if (validCells != NULL || captureCells != NULL || enPassantCells != NULL || castlingCells != NULL)
+                    {
+                        return False;
+                    }
+                }
+            }
+        }
+    }
+
+    else 
+    {
+        return False;
+    }
 }
