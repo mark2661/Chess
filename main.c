@@ -64,7 +64,7 @@ Sound gameOverSound;
 int main(void)
 {
 
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chezz(TM)");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chess(TM)");
     InitAudioDevice();
 
 
@@ -91,19 +91,19 @@ int main(void)
         switch (state)
         {
         case WHITE_IN_PLAY:
-            SetWindowTitle("Chezz(TM) - WHITES TURN");
+            SetWindowTitle("Chess(TM) - WHITES TURN");
             gameIteration(&board, PLAYER_WHITE);
             break;
         case BLACK_IN_PLAY: 
-            SetWindowTitle("Chezz(TM) - BLACKS TURN");
+            SetWindowTitle("Chess(TM) - BLACKS TURN");
             gameIteration(&board, PLAYER_BLACK);
             break;
         case WHITE_PIECE_SELECT_MENU:
-            SetWindowTitle("Chezz(TM) - WHITES TURN");
+            SetWindowTitle("Chess(TM) - WHITES TURN");
             pieceSelectMenuIteration(&board, PLAYER_WHITE);
             break;
         case BLACK_PIECE_SELECT_MENU:
-            SetWindowTitle("Chezz(TM) - BLACKS TURN");
+            SetWindowTitle("Chess(TM) - BLACKS TURN");
             pieceSelectMenuIteration(&board, PLAYER_BLACK);
             break;
         case GAME_OVER:
