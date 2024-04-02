@@ -11,4 +11,4 @@
 *.out
 
 #ignore png images
-*.png
+#*.png
