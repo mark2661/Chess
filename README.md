@@ -1,5 +1,13 @@
 # Chess
-
+A 2D Chess Game. Made using [raylib](https://www.raylib.com/index.html) and C
+<br/><br/>
+## What I Learned
+* Texture and Sound managment using raylib
+* Texture and Text Rendering using raylib
+* How To Implement Data Structures from scratch in C (Linked List and Hash Set)
+* Dynamic Memory Managment in C
+* How To Create a Simple Build System using [GNU make](https://www.gnu.org/software/make/manual/make.html)
+<br/><br/>
 ## ScreenShots
 ### Start of game
 ![](./data/chess_start_SS.png)
