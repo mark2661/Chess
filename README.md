@@ -10,4 +10,5 @@
 
 ## Game Features
 ### Highlight available moves
-https://github.com/mark2661/Chess/blob/main/data/chess_valid_moves_cut.mp4
+file:///home/mark/Desktop/coding/c/chess/data/chess_valid_moves_cut.mp4
+
