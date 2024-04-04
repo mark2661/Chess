@@ -8,6 +8,8 @@ A 2D Chess Game. Made using [raylib](https://www.raylib.com/index.html) and C
 * Dynamic Memory Managment in C
 * How To Create a Simple Build System using [GNU make](https://www.gnu.org/software/make/manual/make.html)
 <br/><br/>
+## DEMO
+<br/><br/>
 ## ScreenShots
 ### Start of game
 ![](./data/chess_start_SS.png)
