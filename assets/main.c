@@ -428,6 +428,7 @@ void endDragOperation(Board* board, DragPiece* dragPiece)
                }
 
                // Check for En Passant capture
+               // TODO: seems to be a bug when trying to en passant capture using a white piece
                else if ((piece->piece == WHITE_PAWN) || (piece->piece == BLACK_PAWN))
                {
                    if (gc->piece->piece == EMPTY && isValidGridCell(gc, dragPiece->enPassantCells))
