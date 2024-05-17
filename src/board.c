@@ -2,11 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "board.h"
+#include "globals.h"
 
 Board initBoard(void)
 {
     Bool b = False;
-    Image image = LoadImage("./pieces_64.png");
+    Image image = LoadImage(CHESS_PIECES_TEXTURE_FILE_PATH);
     Board board = {.colourBoard = {{0}}, .Board={NULL}};
     board.mainTexture = LoadTextureFromImage(image);
     board.pawnSet = createHashSet(); 
@@ -248,7 +249,7 @@ GridCellContainer* getAllCellsContainingPiece(Board* board, ChessPiece pieceType
     if(board == NULL) { return NULL; }
     size_t count = 0;
 
-    // Count the amount of those pieces on the board (used for dymanic memory allocation)
+    // Count the amount of those pieces on the board (used for dynamic memory allocation)
     for(size_t row=0; row<8; row++)
     {
         for(size_t col=0; col<8; col++)
@@ -783,7 +784,7 @@ node getCaptureCells(Board* board, GridCell* gc)
                 {
                      // TODO: BUG(1)(FIXED) Think call to test check is causing the programme to crash
                      // the game works fine for a while then eventually freezes 
-                     // game appears to work alot longer without freezing when call to testCheck is commented out
+                     // game appears to work a lot longer without freezing when call to testCheck is commented out
                      // not fully tested that though.
                      // update: there are circular calls here testCheck calls -> isInCheck -> getCaptureCells
                     if(!testCheck(board, gc, cur->gc, PLAYER_WHITE))
@@ -898,7 +899,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col - 1));
                     if (enPassantCell != NULL && !testCheck(board, gc, enPassantCell, PLAYER_WHITE))
                     {
-                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
+                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
                     }
                 }
@@ -914,7 +915,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row - 1), (gc->col + 1));
                     if (enPassantCell != NULL && !testCheck(board, gc, enPassantCell, PLAYER_WHITE))
                     {
-                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
+                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
                     }
                 }
@@ -932,7 +933,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col - 1));
                     if (enPassantCell != NULL && !testCheck(board, gc, enPassantCell, PLAYER_BLACK))
                     {
-                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
+                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
                     }
                 }
@@ -948,7 +949,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
                     GridCell *enPassantCell = getCellByIndex(board, (gc->row + 1), (gc->col + 1));
                     if (enPassantCell != NULL && !testCheck(board, gc, enPassantCell, PLAYER_BLACK))
                     {
-                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDTENTIFIER_THRESHOLD);
+                        incrementPieceMoveCountByValue(neighbour->piece, EN_PASSANT_IDENTIFIER_THRESHOLD);
                         head = addNode(head, enPassantCell);
                     }
                 }
@@ -959,7 +960,7 @@ node getEnPassantCells(Board* board, GridCell* gc)
     return head;
 }
 
-node getEnPassantNeighours(Board* board, GridCell* gc)
+node getEnPassantNeighbors(Board* board, GridCell* gc)
 {
     if(board == NULL || gc == NULL) { return NULL; }
 
@@ -973,7 +974,7 @@ node getEnPassantNeighours(Board* board, GridCell* gc)
             // check left
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDTENTIFIER_THRESHOLD)
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDENTIFIER_THRESHOLD)
                     && (neighbour->row == 3)) // <-- Row must be == 3 for a BLACK PAWN since En Passant is only valid if the enemy pawn moves 2 squares.
                 {
                     head = addNode(head, neighbour);
@@ -983,7 +984,7 @@ node getEnPassantNeighours(Board* board, GridCell* gc)
             // check right
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDTENTIFIER_THRESHOLD)
+                if ((neighbour != NULL) && (neighbour->piece->piece == BLACK_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDENTIFIER_THRESHOLD)
                     && (neighbour->row == 3))
                 {
                     head = addNode(head, neighbour);
@@ -995,7 +996,7 @@ node getEnPassantNeighours(Board* board, GridCell* gc)
             // check left
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col - 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDTENTIFIER_THRESHOLD)
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDENTIFIER_THRESHOLD)
                     && (neighbour->row == 4)) // <-- Row must be == 4 for a WHITE PAWN since En Passant is only valid if the enemy pawn moves 2 squares.
                 {
                     head = addNode(head, neighbour);
@@ -1005,7 +1006,7 @@ node getEnPassantNeighours(Board* board, GridCell* gc)
             // check right
             {
                 GridCell *neighbour = getCellByIndex(board, gc->row, gc->col + 1);
-                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDTENTIFIER_THRESHOLD)
+                if ((neighbour != NULL) && (neighbour->piece->piece == WHITE_PAWN) && (neighbour->piece->moves > EN_PASSANT_IDENTIFIER_THRESHOLD)
                     && (neighbour->row == 4))
                 {
                     head = addNode(head, neighbour);
@@ -1146,7 +1147,7 @@ Bool isAllowedToCastle(Board* board, GridCell* gc)
 
         // When checking if cells between the castle and the king are empty. We can assume that we need to check the horizontal cells between
         // the kings original position and the castles original position only (since it must be both the kings and the castles first move)
-        // e.g for the white king and the queenside castle we would check cells (e1, f1, g1)
+        // e.g for the white king and the queen side castle we would check cells (e1, f1, g1)
         // *note Pam Krabbe castling (vertical castling between a king and promoted castle) is not allowed in the FIDE rule set.
         // (https://de-m-wikipedia-org.translate.goog/wiki/Pam-Krabb%C3%A9-Rochade?_x_tr_sl=auto&_x_tr_tl=en&_x_tr_hl=en)
 
@@ -1337,7 +1338,7 @@ node concatenate_LL(node head1, node head2)
         cur = cur->next;
     }
 
-    // contatenate lists
+    // concatenate lists
     cur->next = head2;
 
     return head1;
@@ -1548,7 +1549,7 @@ Bool testCheck(Board* board, GridCell* originCell, GridCell* destinationCell, Pl
 
     // Remove old piece
     updateBoard(testBoard, originCell->row, originCell->col, NULL);
-    // Add piece to test positon
+    // Add piece to test position
     updateBoard(testBoard, destinationCell->row, destinationCell->col, testPiece);
 
     Bool res = isInCheck(testBoard, player); 
@@ -1557,9 +1558,9 @@ Bool testCheck(Board* board, GridCell* originCell, GridCell* destinationCell, Pl
     return res;
 }
 
-Board* deepCopyBoard(Board* oringinalBoard)
+Board* deepCopyBoard(Board* originalBoard)
 {
-    if(oringinalBoard == NULL) { return NULL; }
+    if(originalBoard == NULL) { return NULL; }
     Board* newBoard = (Board*)malloc(sizeof(Board));
 
     // copy colour board
@@ -1567,7 +1568,7 @@ Board* deepCopyBoard(Board* oringinalBoard)
     {
         for(size_t col=0; col<8; col++)
         {
-            newBoard->colourBoard[row][col] = oringinalBoard->colourBoard[row][col];
+            newBoard->colourBoard[row][col] = originalBoard->colourBoard[row][col];
         }
     }
 
@@ -1576,13 +1577,13 @@ Board* deepCopyBoard(Board* oringinalBoard)
     {
         for(size_t col=0; col<8; col++)
         {
-            GridCell* newGC = deepCopyGridCell(oringinalBoard->Board[row][col]); //<-- BUG(1) newGC is NULL
+            GridCell* newGC = deepCopyGridCell(originalBoard->Board[row][col]); //<-- BUG(1) newGC is NULL
             if(newGC == NULL) { return NULL; }
             newBoard->Board[row][col] = newGC;
         }
     }
 
-    newBoard->mainTexture = oringinalBoard->mainTexture;
+    newBoard->mainTexture = originalBoard->mainTexture;
     newBoard->pawnSet = NULL; // test boards don't require a pawnSet ATM;
 
     return newBoard;

@@ -55,7 +55,7 @@ void performQueenSideCastle(Board*, GridCell*);
 node getCaptureCells(Board*, GridCell*);
 node getCaptureCellsIgnoreCheck(Board*, GridCell*);
 node getEnPassantCells(Board*, GridCell*);
-node getEnPassantNeighours(Board*, GridCell*);
+node getEnPassantNeighbors(Board*, GridCell*);
 Bool isWhitePiece(Piece*);
 Bool isBlackPiece(Piece*);
 Bool isAllowedToCastle(Board*, GridCell*);

@@ -67,15 +67,13 @@ int main(void)
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Chess(TM)");
     InitAudioDevice();
 
-
-    // Load audio assests into memory
-    moveSound = LoadSound("./chess_move.mp3");
-    captureSound = LoadSound("./chess_capture.mp3");
-    illegalMoveSound = LoadSound("./chess_illegal.mp3");
-    pawnPromotionSound = LoadSound("./chess_promote.mp3");
-    castleSound = LoadSound("./chess_castle.mp3");
-    checkSound = LoadSound("./chess_check.mp3");
-    gameOverSound = LoadSound("./chess_game_over.mp3");
+    moveSound = LoadSound(CHESS_MOVE_SOUND_FILE_PATH);
+    captureSound = LoadSound(CHESS_CAPTURE_SOUND_FILE_PATH);
+    illegalMoveSound = LoadSound(CHESS_ILLEGAL_SOUND_FILE_PATH);
+    pawnPromotionSound = LoadSound(CHESS_PROMOTE_SOUND_FILE_PATH);
+    castleSound = LoadSound(CHESS_CASTLE_SOUND_FILE_PATH);
+    checkSound = LoadSound(CHESS_CHECK_SOUND_FILE_PATH);
+    gameOverSound = LoadSound(CHESS_GAME_OVER_SOUND_FILE_PATH);
 
     SetTargetFPS(60);
 
@@ -107,7 +105,7 @@ int main(void)
             pieceSelectMenuIteration(&board, PLAYER_BLACK);
             break;
         case GAME_OVER:
-            // TODO: Implemetn game drawn end game state
+            // TODO: Implement game drawn end game state
             gameOverMenuIteration(&board);
             break;
         case RESTART:
@@ -277,7 +275,7 @@ void freeDragPiece(DragPiece* dragPiece)
     dragPiece->castleCells = NULL;
 
     // Can't free the enPassantCells linked list since the global variable enPassantPawnsLL may have a pointer to the memory 
-    // which is used by the reEnableEnPassantCapture and disableEnPassantCaptue.
+    // which is used by the reEnableEnPassantCapture and disableEnPassantCapture.
 
     // freeList(dragPiece->enPassantCells);
     // dragPiece->enPassantCells = NULL;
@@ -312,7 +310,7 @@ DragPiece* getDragPiece(Board* board, GridCell* gc)
         dragPiece->enPassantCells = getEnPassantCells(board, gc);
         if(dragPiece->enPassantCells != NULL)
         {
-            enPassantPawnsLL = getEnPassantNeighours(board, gc);
+            enPassantPawnsLL = getEnPassantNeighbors(board, gc);
         }
     }
     else
